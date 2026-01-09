@@ -1,9 +1,11 @@
 import { createClient } from '@supabase/supabase-js';
 
-// ここに型定義を追加します
+// 足りなかった「name」と「ai_reply」を追加しました
 export interface GratitudePost {
   id: string;
   content: string;
+  name: string;
+  ai_reply: string | null;
   created_at: string;
 }
 
