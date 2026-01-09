@@ -43,14 +43,12 @@ function App() {
     audio.setAttribute('playsinline', 'true');
     audioRef.current = audio;
 
-    // --- スマホでブラウザを閉じたり隠れたりした時に音を止める設定 ---
     const handleVisibilityChange = () => {
       if (document.hidden && audioRef.current) {
         audioRef.current.pause();
       }
     };
     document.addEventListener('visibilitychange', handleVisibilityChange);
-    // ---------------------------------------------------------
 
     const channel = supabase
       .channel('realtime-posts')
@@ -171,4 +169,37 @@ function App() {
                 </button>
               </div>
             ) : (
-              <form onSubmit={handleSubmit} className="space-y-8 bg-bg-secondary p-8
+              <form onSubmit={handleSubmit} className="space-y-8 bg-bg-secondary p-8 sm:p-10 card shadow-subtle relative w-full border border-border">
+                <div className="flex flex-col items-center gap-4">
+                  <p className="text-[10px] tracking-[0.2em] text-text-tertiary font-mincho uppercase">Writing with BGM</p>
+                  <button type="button" onClick={toggleMute} className="flex items-center justify-center w-12 h-12 rounded-full bg-white/50 border border-border/50 shadow-sm">
+                    <span className="material-symbols-outlined text-text-secondary text-2xl">{isMuted ? 'music_note' : 'music_off'}</span>
+                  </button>
+                </div>
+                <div>
+                  <label className="block text-xs mb-3 font-mincho tracking-wide text-text-secondary">お名前(ニックネーム)</label>
+                  <input type="text" value={name} onChange={(e) => setName(e.target.value)} className="input-base text-base bg-white py-3 outline-none" disabled={submitting} required />
+                </div>
+                <div>
+                  <label className="block text-xs mb-3 font-mincho tracking-wide text-text-secondary">本文</label>
+                  <textarea value={content} onChange={(e) => setContent(e.target.value)} rows={6} className="input-base resize-none text-base bg-white py-3 outline-none" disabled={submitting} required />
+                </div>
+                <div className="flex flex-col gap-4 pt-4">
+                  <button type="submit" disabled={submitting} className="bg-[#4a4030] hover:bg-[#3d3428] text-white w-full font-medium text-base py-4 rounded-lg shadow-md">
+                    {submitting ? '地蔵に届けています...' : '地蔵に届ける'}
+                  </button>
+                  <button type="button" onClick={() => { setShowForm(false); }} disabled={submitting} className="btn-secondary w-full text-base py-4">
+                    やめる
+                  </button>
+                </div>
+              </form>
+            )}
+          </div>
+        </div>
+
+        <div className="space-y-12 max-w-4xl mx-auto">
+          {posts.map((post) => (
+            <article key={post.id} className="border border-border rounded-lg overflow-hidden bg-white shadow-subtle">
+              <div className="p-6 sm:p-12 pb-8 flex flex-col sm:flex-row items-start gap-6 sm:gap-10">
+                <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full flex-shrink-0 overflow-hidden bg-[#fafaf5] border border-border/40 shadow-inner flex items-center justify-center">
+                  <img src={CANDLE_GIF} alt="灯" className="w-[140%] h-[140%] object-cover mix-blend-multiply
