@@ -43,6 +43,15 @@ function App() {
     audio.setAttribute('playsinline', 'true');
     audioRef.current = audio;
 
+    // --- スマホでブラウザを閉じたり隠れたりした時に音を止める設定 ---
+    const handleVisibilityChange = () => {
+      if (document.hidden && audioRef.current) {
+        audioRef.current.pause();
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    // ---------------------------------------------------------
+
     const channel = supabase
       .channel('realtime-posts')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'gratitude_posts' }, () => {
@@ -52,6 +61,7 @@ function App() {
 
     return () => {
       supabase.removeChannel(channel);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
       if (audioRef.current) {
         audioRef.current.pause();
         audioRef.current = null;
@@ -131,7 +141,6 @@ function App() {
             <div className="w-full max-w-4xl mb-16">
               <div className="relative flex flex-col md:flex-row items-center gap-8 md:gap-16 bg-white/20 p-8 md:p-12 rounded-2xl overflow-hidden min-h-[350px] md:min-h-0 border border-border/30">
                 <div className="absolute inset-0 flex justify-center items-center md:hidden opacity-40 pointer-events-none">
-                  {/* styleタグで直接サイズを指定 */}
                   <img src={JIZO_IPHONE} alt="" style={{ width: '100%', maxWidth: '300px' }} className="h-auto object-contain px-4" />
                 </div>
                 <div className="hidden md:flex justify-start items-center md:w-2/5 pointer-events-none">
@@ -162,73 +171,4 @@ function App() {
                 </button>
               </div>
             ) : (
-              <form onSubmit={handleSubmit} className="space-y-8 bg-bg-secondary p-8 sm:p-10 card shadow-subtle relative w-full border border-border">
-                <div className="flex flex-col items-center gap-4">
-                  <p className="text-[10px] tracking-[0.2em] text-text-tertiary font-mincho uppercase">Writing with BGM</p>
-                  <button type="button" onClick={toggleMute} className="flex items-center justify-center w-12 h-12 rounded-full bg-white/50 border border-border/50 shadow-sm">
-                    <span className="material-symbols-outlined text-text-secondary text-2xl">{isMuted ? 'music_note' : 'music_off'}</span>
-                  </button>
-                </div>
-                <div>
-                  <label className="block text-xs mb-3 font-mincho tracking-wide text-text-secondary">お名前(ニックネーム)</label>
-                  <input type="text" value={name} onChange={(e) => setName(e.target.value)} className="input-base text-base bg-white py-3 outline-none" disabled={submitting} required />
-                </div>
-                <div>
-                  <label className="block text-xs mb-3 font-mincho tracking-wide text-text-secondary">本文</label>
-                  <textarea value={content} onChange={(e) => setContent(e.target.value)} rows={6} className="input-base resize-none text-base bg-white py-3 outline-none" disabled={submitting} required />
-                </div>
-                <div className="flex flex-col gap-4 pt-4">
-                  <button type="submit" disabled={submitting} className="bg-[#4a4030] hover:bg-[#3d3428] text-white w-full font-medium text-base py-4 rounded-lg shadow-md">
-                    {submitting ? '地蔵に届けています...' : '地蔵に届ける'}
-                  </button>
-                  <button type="button" onClick={() => { setShowForm(false); }} disabled={submitting} className="btn-secondary w-full text-base py-4">
-                    やめる
-                  </button>
-                </div>
-              </form>
-            )}
-          </div>
-        </div>
-
-        <div className="space-y-12 max-w-4xl mx-auto">
-          {posts.map((post) => (
-            <article key={post.id} className="border border-border rounded-lg overflow-hidden bg-white shadow-subtle">
-              <div className="p-6 sm:p-12 pb-8 flex flex-col sm:flex-row items-start gap-6 sm:gap-10">
-                <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full flex-shrink-0 overflow-hidden bg-[#fafaf5] border border-border/40 shadow-inner flex items-center justify-center">
-                  <img src={CANDLE_GIF} alt="灯" className="w-[140%] h-[140%] object-cover mix-blend-multiply opacity-90" />
-                </div>
-                
-                <div className="flex-1 w-full">
-                  <div className="flex items-baseline gap-4 text-[10px] sm:text-xs mb-5">
-                    <time className="text-text-secondary">
-                      {new Date(post.created_at).toLocaleDateString('ja-JP', { year: 'numeric', month: 'long', day: 'numeric' })}
-                    </time>
-                    <span className="font-mincho tracking-wide text-text-secondary">{post.name}</span>
-                  </div>
-                  <p className="whitespace-pre-wrap leading-loose text-sm sm:text-base opacity-90">{post.content}</p>
-                </div>
-              </div>
-
-              {post.ai_reply && (
-                <div className="px-4 pb-4 sm:px-10 sm:pb-10 pt-0">
-                  <div className="bg-[#fafaf5] rounded-lg p-5 sm:p-8 flex flex-col sm:flex-row items-start gap-4 sm:gap-6 border border-[#f0eee5]">
-                    {/* 直接px指定で大きくする */}
-                    <div style={{ width: '60px', height: '60px' }} className="rounded-full flex-shrink-0 overflow-hidden border border-border/30">
-                      <img src={JIZO_DESKTOP} alt="地蔵" className="w-full h-full object-cover" />
-                    </div>
-                    <div className="flex-1">
-                      <div className="text-[9px] text-text-tertiary mb-2 font-mincho tracking-widest uppercase">ありがと地蔵</div>
-                      <p className="leading-loose text-sm sm:text-base">{post.ai_reply}</p>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </article>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-export default App;
+              <form onSubmit={handleSubmit} className="space-y-8 bg-bg-secondary p-8
