@@ -1,4 +1,5 @@
-@import url('https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@400;700&family=Zen+Kaku+Gothic+New:wght@300;400;700&display=swap');
+/* 1. ここも新しいフォント（Noto）の読み込みに変えます */
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;700&family=Noto+Serif+JP:wght@400;700&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -6,6 +7,7 @@
 
 @layer base {
   body {
+    /* font-gothic を使うように指示（これで中身が Noto になります） */
     @apply bg-bg-primary text-text-primary font-gothic;
     font-size: 14px;
     line-height: 2;
@@ -13,6 +15,7 @@
   }
 
   h1, h2, h3, h4, h5, h6 {
+    /* font-mincho を使うように指示（これで中身が Noto Serif になります） */
     @apply font-mincho font-normal;
     letter-spacing: 0.2em;
   }
