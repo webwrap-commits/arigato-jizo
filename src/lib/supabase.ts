@@ -1,6 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
 
-// 足りなかった「name」と「ai_reply」を追加しました
 export interface GratitudePost {
   id: string;
   content: string;
@@ -9,11 +8,8 @@ export interface GratitudePost {
   created_at: string;
 }
 
-const supabaseUrl = (import.meta as any).env.VITE_SUPABASE_URL;
-const supabaseAnonKey = (import.meta as any).env.VITE_SUPABASE_ANON_KEY;
-
-if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error('Missing Supabase environment variables');
-}
+// 直接、あなたの情報を書き込みます
+const supabaseUrl ='https://jvutxraxzpolmoypgvdh.supabase.co';
+const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp2dXR4cmF4enBvbG1veXBndmRoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ4MjQ0MTQsImV4cCI6MjA4MDQwMDQxNH0.nzz9va3Uy0s-LPvb7PzvotFGWoRq9BepaGG5t5WEsBc';
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
