@@ -13,9 +13,10 @@ export default {
         'border': '#e8e6e1',
       },
       fontFamily: {
-        // 名前（minchoやgothic）はそのままに、中身を新しいフォントに入れ替えました
+        // 元の設定を残しつつ、Zen Maru Gothicを追加しました
         'mincho': ['"Noto Serif JP"', 'serif'],
         'gothic': ['"Noto Sans JP"', 'sans-serif'],
+        'sans': ['"Zen Maru Gothic"', 'sans-serif'],
       },
       spacing: {
         '80px': '80px',
@@ -26,7 +27,6 @@ export default {
       boxShadow: {
         'subtle': '0 2px 8px rgba(0, 0, 0, 0.05)',
       },
-      // 1200pxの幅を使いやすくするための設定を追加しました
       maxWidth: {
         'site': '1200px',
       },
