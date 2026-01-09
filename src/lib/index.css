@@ -1,0 +1,49 @@
+@import url('https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@400;700&family=Zen+Kaku+Gothic+New:wght@300;400;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-bg-primary text-text-primary font-gothic;
+    font-size: 14px;
+    line-height: 2;
+    letter-spacing: 0.05em;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-mincho font-normal;
+    letter-spacing: 0.2em;
+  }
+
+  h1 {
+    @apply text-lg;
+  }
+
+  h2 {
+    @apply text-base;
+  }
+
+  p {
+    line-height: 2;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply bg-accent text-white px-12 py-[18px] text-[13px] tracking-wider border border-transparent rounded-minimal shadow-subtle hover:opacity-80 transition-opacity duration-200 disabled:opacity-50 disabled:cursor-not-allowed font-gothic;
+  }
+
+  .btn-secondary {
+    @apply border border-border text-text-primary px-12 py-[18px] text-[13px] tracking-wider rounded-minimal shadow-subtle hover:bg-bg-secondary transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed font-gothic;
+  }
+
+  .input-base {
+    @apply w-full px-4 py-3 border border-border bg-white rounded-minimal focus:outline-none focus:border-accent transition-colors text-text-primary placeholder-text-secondary;
+  }
+
+  .card {
+    @apply border border-border rounded-minimal shadow-subtle;
+  }
+}
