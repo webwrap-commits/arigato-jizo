@@ -202,4 +202,39 @@ function App() {
             <article key={post.id} className="border border-border rounded-lg overflow-hidden bg-white shadow-subtle">
               <div className="p-6 sm:p-12 pb-8 flex flex-col sm:flex-row items-start gap-6 sm:gap-10">
                 <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full flex-shrink-0 overflow-hidden bg-[#fafaf5] border border-border/40 shadow-inner flex items-center justify-center">
-                  <img src={CANDLE_GIF} alt="灯" className="w-[140%] h-[140%] object-cover mix-blend-multiply
+                  <img src={CANDLE_GIF} alt="灯" className="w-[140%] h-[140%] object-cover mix-blend-multiply opacity-90" />
+                </div>
+                
+                <div className="flex-1 w-full">
+                  <div className="flex items-baseline gap-4 text-[10px] sm:text-xs mb-5">
+                    <time className="text-text-secondary">
+                      {new Date(post.created_at).toLocaleDateString('ja-JP', { year: 'numeric', month: 'long', day: 'numeric' })}
+                    </time>
+                    <span className="font-mincho tracking-wide text-text-secondary">{post.name}</span>
+                  </div>
+                  <p className="whitespace-pre-wrap leading-loose text-sm sm:text-base opacity-90">{post.content}</p>
+                </div>
+              </div>
+
+              {post.ai_reply && (
+                <div className="px-4 pb-4 sm:px-10 sm:pb-10 pt-0">
+                  <div className="bg-[#fafaf5] rounded-lg p-5 sm:p-8 flex flex-col sm:flex-row items-start gap-4 sm:gap-6 border border-[#f0eee5]">
+                    <div style={{ width: '60px', height: '60px' }} className="rounded-full flex-shrink-0 overflow-hidden border border-border/30">
+                      <img src={JIZO_DESKTOP} alt="地蔵" className="w-full h-full object-cover" />
+                    </div>
+                    <div className="flex-1">
+                      <div className="text-[9px] text-text-tertiary mb-2 font-mincho tracking-widest uppercase">ありがと地蔵</div>
+                      <p className="leading-loose text-sm sm:text-base">{post.ai_reply}</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </article>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default App;
