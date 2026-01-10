@@ -117,6 +117,24 @@ function App() {
 
   if (loading) return <div className="min-h-screen bg-bg-primary flex items-center justify-center font-gothic text-text-secondary text-sm">読み込み中...</div>;
 
+  // ナビゲーションのパーツ化
+  const NavLinks = () => (
+    <div className="flex justify-center gap-12">
+      <button 
+        onClick={() => setViewMode('all')} 
+        className={`text-xs tracking-[0.2em] transition-colors pb-1 ${viewMode === 'all' ? 'text-text-primary border-b border-text-primary' : 'text-text-tertiary hover:text-text-secondary'}`}
+      >
+        みんなの灯火
+      </button>
+      <button 
+        onClick={() => setViewMode('mypage')} 
+        className={`text-xs tracking-[0.2em] transition-colors pb-1 ${viewMode === 'mypage' ? 'text-text-primary border-b border-text-primary' : 'text-text-tertiary hover:text-text-secondary'}`}
+      >
+        心覚えの部屋
+      </button>
+    </div>
+  );
+
   return (
     <div className="min-h-screen bg-bg-primary font-gothic font-extralight text-text-primary relative" ref={topRef}>
       <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20,400,0,0" />
@@ -131,25 +149,19 @@ function App() {
         .fill-1 { font-variation-settings: 'FILL' 1; }
       `}</style>
 
-      {/* ナビゲーション */}
-      <nav className="flex justify-center gap-12 py-5 border-b border-border/10 sticky top-0 bg-bg-primary/90 backdrop-blur-md z-50">
-        <button 
-          onClick={() => setViewMode('all')} 
-          className={`text-xs tracking-[0.2em] transition-colors ${viewMode === 'all' ? 'text-text-primary border-b border-text-primary' : 'text-text-tertiary hover:text-text-secondary'}`}
-        >
-          すべての灯火
-        </button>
-        <button 
-          onClick={() => setViewMode('mypage')} 
-          className={`text-xs tracking-[0.2em] transition-colors ${viewMode === 'mypage' ? 'text-text-primary border-b border-text-primary' : 'text-text-tertiary hover:text-text-secondary'}`}
-        >
-          心覚えの部屋
-        </button>
+      {/* スマホ版のみ：上部に固定表示 */}
+      <nav className="md:hidden py-5 border-b border-border/10 sticky top-0 bg-bg-primary/90 backdrop-blur-md z-50">
+        <NavLinks />
       </nav>
 
       <div className="max-w-site mx-auto px-6 py-12 sm:py-20">
         <div className="flex flex-col items-center mb-10 sm:mb-16">
           <h1 className="text-4xl sm:text-5xl font-mincho font-extralight mb-10 tracking-widest cursor-pointer" onClick={() => setViewMode('all')}>ありがと地蔵</h1>
+
+          {/* デスクトップ版のみ：タイトルのすぐ下に配置 */}
+          <nav className="hidden md:block mb-12">
+            <NavLinks />
+          </nav>
 
           {viewMode === 'mypage' ? (
             <div className="w-full max-w-lg mb-12 text-center">
