@@ -52,7 +52,6 @@ function App() {
       if (document.hidden) {
         audio.pause();
       } else if (!isMuted) {
-        // 戻ってきたときにミュートでなければ再生を試みる
         audio.play().catch(() => {});
       }
     };
@@ -282,40 +281,43 @@ function App() {
                   <MuteButton />
                 </>
               ) : (
-                <form onSubmit={handleSubmit} className="space-y-8 bg-bg-secondary p-8 sm:p-10 card shadow-subtle relative w-full border border-border">
-                  <div>
-                    <label className="block text-xs mb-3 font-mincho tracking-wide text-text-secondary uppercase">お名前</label>
-                    <input type="text" value={name} onChange={(e) => setName(e.target.value)} className="input-base text-base bg-white py-3 outline-none" required />
-                  </div>
-                  <div>
-                    <label className="block text-xs mb-3 font-mincho tracking-wide text-text-secondary uppercase">本文</label>
-                    <textarea value={content} onChange={(e) => setContent(e.target.value)} rows={6} className="input-base resize-none text-base bg-white py-3 outline-none" required />
-                  </div>
-                  
-                  {(omusubiCount > 0 || dangoCount > 0) && (
-                    <div className="pt-2 border-t border-border/10">
-                      <p className="text-[10px] tracking-[0.2em] text-text-tertiary mb-4 text-center uppercase">お供え物を添える（1つだけ）</p>
-                      <div className="flex justify-center gap-8">
-                        {omusubiCount > 0 && (
-                          <button type="button" onClick={() => setSelectedOffering(selectedOffering === 'omusubi' ? 'none' : 'omusubi')} className={`flex flex-col items-center transition-all ${selectedOffering === 'omusubi' ? 'scale-110 opacity-100' : 'opacity-30 hover:opacity-60'}`}>
-                            <img src={IMG_OMUSUBI} alt="おむすび" className="w-10 h-10 mb-1 object-contain" />
-                            <span className="text-[8px]">おむすび({omusubiCount})</span>
-                          </button>
-                        )}
-                        {dangoCount > 0 && (
-                          <button type="button" onClick={() => setSelectedOffering(selectedOffering === 'dango' ? 'none' : 'dango')} className={`flex flex-col items-center transition-all ${selectedOffering === 'dango' ? 'scale-110 opacity-100' : 'opacity-30 hover:opacity-60'}`}>
-                            <img src={IMG_DANGO} alt="お団子" className="w-10 h-10 mb-1 object-contain" />
-                            <span className="text-[8px]">お団子({dangoCount})</span>
-                          </button>
-                        )}
-                      </div>
+                <>
+                  <form onSubmit={handleSubmit} className="space-y-8 bg-bg-secondary p-8 sm:p-10 card shadow-subtle relative w-full border border-border">
+                    <div>
+                      <label className="block text-xs mb-3 font-mincho tracking-wide text-text-secondary uppercase">お名前</label>
+                      <input type="text" value={name} onChange={(e) => setName(e.target.value)} className="input-base text-base bg-white py-3 outline-none" required />
                     </div>
-                  )}
-                  <div className="flex flex-col gap-4 pt-4">
-                    <button type="submit" disabled={submitting} className="bg-[#4a4030] hover:bg-[#3d3428] text-white w-full font-medium text-base py-4 rounded-lg shadow-md">{submitting ? '地蔵に届けています...' : '地蔵に届ける'}</button>
-                    <button type="button" onClick={() => setShowForm(false)} className="btn-secondary w-full text-base py-4">やめる</button>
-                  </div>
-                </form>
+                    <div>
+                      <label className="block text-xs mb-3 font-mincho tracking-wide text-text-secondary uppercase">本文</label>
+                      <textarea value={content} onChange={(e) => setContent(e.target.value)} rows={6} className="input-base resize-none text-base bg-white py-3 outline-none" required />
+                    </div>
+                    
+                    {(omusubiCount > 0 || dangoCount > 0) && (
+                      <div className="pt-2 border-t border-border/10">
+                        <p className="text-[10px] tracking-[0.2em] text-text-tertiary mb-4 text-center uppercase">お供え物を添える（1つだけ）</p>
+                        <div className="flex justify-center gap-8">
+                          {omusubiCount > 0 && (
+                            <button type="button" onClick={() => setSelectedOffering(selectedOffering === 'omusubi' ? 'none' : 'omusubi')} className={`flex flex-col items-center transition-all ${selectedOffering === 'omusubi' ? 'scale-110 opacity-100' : 'opacity-30 hover:opacity-60'}`}>
+                              <img src={IMG_OMUSUBI} alt="おむすび" className="w-10 h-10 mb-1 object-contain" />
+                              <span className="text-[8px]">おむすび({omusubiCount})</span>
+                            </button>
+                          )}
+                          {dangoCount > 0 && (
+                            <button type="button" onClick={() => setSelectedOffering(selectedOffering === 'dango' ? 'none' : 'dango')} className={`flex flex-col items-center transition-all ${selectedOffering === 'dango' ? 'scale-110 opacity-100' : 'opacity-30 hover:opacity-60'}`}>
+                              <img src={IMG_DANGO} alt="お団子" className="w-10 h-10 mb-1 object-contain" />
+                              <span className="text-[8px]">お団子({dangoCount})</span>
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                    <div className="flex flex-col gap-4 pt-4">
+                      <button type="submit" disabled={submitting} className="bg-[#4a4030] hover:bg-[#3d3428] text-white w-full font-medium text-base py-4 rounded-lg shadow-md">{submitting ? '地蔵に届けています...' : '地蔵に届ける'}</button>
+                      <button type="button" onClick={() => setShowForm(false)} className="btn-secondary w-full text-base py-4">やめる</button>
+                    </div>
+                  </form>
+                  <MuteButton />
+                </>
               )}
             </div>
           )}
