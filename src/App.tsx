@@ -48,27 +48,35 @@ function App() {
     audio.volume = 0.2;
     audioRef.current = audio;
 
-    // ブラウザのタブ切り替えなどで音楽を止める処理
     const handleVisibilityChange = () => {
       if (document.hidden) {
         audio.pause();
-      } else if (!isMuted && hasInteracted) {
+      } else if (!isMuted && (hasInteracted || showForm)) {
         audio.play().catch(() => {});
       }
     };
 
     document.addEventListener("visibilitychange", handleVisibilityChange);
 
+    const channel = supabase
+      .channel('realtime-posts')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'gratitude_posts' }, () => {
+        fetchPosts(); 
+      })
+      .subscribe();
+
     return () => {
       document.removeEventListener("visibilitychange", handleVisibilityChange);
+      supabase.removeChannel(channel);
       audio.pause();
     };
-  }, [isMuted, hasInteracted]);
+  }, [isMuted, hasInteracted, showForm]);
 
   const toggleMute = () => {
-    setIsMuted(!isMuted);
+    const newMuteState = !isMuted;
+    setIsMuted(newMuteState);
     if (audioRef.current) {
-      if (!isMuted) {
+      if (newMuteState) {
         audioRef.current.pause();
       } else {
         audioRef.current.play().catch(() => {});
@@ -132,6 +140,9 @@ function App() {
           }
           setOfferingEffect(selectedOffering);
           setOfferingMessage(customReply);
+        } else {
+          setOfferingEffect('none');
+          setOfferingMessage('');
         }
       }
 
@@ -163,8 +174,8 @@ function App() {
 
   const MuteButton = () => (
     <button type="button" onClick={toggleMute} className="flex items-center gap-2 text-text-tertiary hover:text-text-secondary transition-colors mt-4">
-      <span className="material-symbols-outlined text-xl">{isMuted ? 'music_off' : 'music_note'}</span>
-      <span className="text-[10px] tracking-widest uppercase">{isMuted ? 'Muted' : 'Playing'}</span>
+      <span className="material-symbols-outlined text-lg">{isMuted ? 'volume_off' : 'volume_up'}</span>
+      <span className="text-[10px] tracking-[0.2em] uppercase">{isMuted ? 'Muted' : 'Mute'}</span>
     </button>
   );
 
@@ -176,7 +187,7 @@ function App() {
         @keyframes scrollText { 0% { transform: translateY(0); } 100% { transform: translateY(-50%); } }
         .scrolling-container { overflow: hidden; position: relative; }
         .scrolling-content { display: flex; flex-direction: column; animation: scrollText 45s linear infinite; }
-        .fade-in { animation: fadeIn 1s ease forwards; }
+        .fade-in { animation: fadeIn 1.2s ease forwards; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         .fill-1 { font-variation-settings: 'FILL' 1; }
       `}</style>
