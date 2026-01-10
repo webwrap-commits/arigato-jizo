@@ -1,15 +1,15 @@
-import { useState, useEffect, useRef } from 'react';
-import { supabase, GratitudePost } from './lib/supabase';
+import { useState, useEffect } from 'react';
+import { supabase } from './lib/supabase';
 
 function App() {
-  const [posts, setPosts] = useState<GratitudePost[]>([]);
   const [loading, setLoading] = useState(true);
-  const JIZO_IPHONE = "https://res.cloudinary.com/dh6zibjr8/image/upload/v1767939481/jizo_iphone_hqrogw.png";
+  
+  // URLに /w_600/ を追加して、Cloudinary側から大きな画像を出力させます
+  const JIZO_IPHONE = "https://res.cloudinary.com/dh6zibjr8/image/upload/w_600/v1767939481/jizo_iphone_hqrogw.png";
 
   useEffect(() => {
     const fetchPosts = async () => {
-      const { data } = await supabase.from('gratitude_posts').select('*');
-      setPosts(data || []);
+      await supabase.from('gratitude_posts').select('*');
       setLoading(false);
     };
     fetchPosts();
@@ -19,42 +19,52 @@ function App() {
 
   return (
     <div style={{ backgroundColor: '#fdfcf8', minHeight: '100vh', padding: '20px' }}>
-      <h1 style={{ textAlign: 'center', fontFamily: 'serif' }}>サイズ確認テスト</h1>
+      <h1 style={{ textAlign: 'center', fontFamily: 'serif', fontSize: '20px' }}>サイズ確認：最終テスト</h1>
       
-      {/* 基準となるボタン（比較用） */}
+      {/* 比較用のボタン（幅300px） */}
       <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '40px' }}>
-        <button style={{ width: '300px', padding: '20px', backgroundColor: '#4a4030', color: 'white', borderRadius: '8px', border: 'none' }}>
-          ありがとうを灯す（幅300px）
+        <button style={{ 
+          width: '300px', 
+          padding: '20px', 
+          backgroundColor: '#4a4030', 
+          color: 'white', 
+          borderRadius: '8px', 
+          border: 'none',
+          fontSize: '16px'
+        }}>
+          ありがとうを灯す(300px)
         </button>
       </div>
 
       <div style={{ 
-        border: '2px solid red', 
-        position: 'relative', 
+        border: '3px solid red', 
         width: '100%', 
         height: '400px',
         display: 'flex',
+        flexDirection: 'column',
         justifyContent: 'center',
-        alignItems: 'center'
+        alignItems: 'center',
+        backgroundColor: '#fff'
       }}>
-        <p style={{ position: 'absolute', top: 10, fontSize: '12px' }}>↓この地蔵がボタンと同じくらいの幅に見えるか？</p>
+        <p style={{ marginBottom: '10px', fontSize: '12px', color: 'red', fontWeight: 'bold' }}>
+          ↓ この地蔵が上のボタンと「ほぼ同じ幅」なら成功！
+        </p>
         
-        {/* 地蔵画像：あえてCSSクラスを使わず、直接強力にサイズ指定 */}
         <img 
           src={JIZO_IPHONE} 
           style={{ 
-            width: '290px', 
+            width: '290px',      // ここで290pxを指定
+            minWidth: '290px',   // 強制的に290pxを維持
             height: 'auto', 
             display: 'block',
-            opacity: 0.8
+            border: '1px solid #ccc'
           }} 
         />
       </div>
 
-      <p style={{ textAlign: 'center', marginTop: '20px', fontSize: '14px' }}>
-        赤い枠の中に、ボタンとほぼ同じ横幅でお地蔵様がいますか？<br/>
-        もしこれでも小さいなら、ブラウザ自体が画像を縮小表示しています。
-      </p>
+      <div style={{ marginTop: '20px', padding: '10px', fontSize: '13px', lineHeight: '1.6' }}>
+        <p>もしこれでも「ボタンの3分の1」しかないのであれば、画像やプログラムの問題ではなく、スマホ側の表示設定（index.html）に原因が絞られます。</p>
+      </div>
     </div>
   );
 }
