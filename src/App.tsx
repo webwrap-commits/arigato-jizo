@@ -150,22 +150,19 @@ function App() {
 
           {!showForm && !hasInteracted && (
             <div className="w-full max-w-4xl mb-16">
-              {/* overflow-hiddenを解除し、中身が自由なサイズになれるように調整 */}
-              <div className="relative flex flex-col md:flex-row items-center gap-8 md:gap-16 bg-white/20 p-8 md:p-12 rounded-2xl min-h-[500px] md:min-h-0 border border-border/30">
+              <div className="relative flex flex-col md:flex-row items-center gap-8 md:gap-16 bg-white/20 p-8 md:p-12 rounded-2xl min-h-[450px] md:min-h-0 border border-border/30">
                 
-                {/* スマホ用背景地蔵：サイズ指定に !important を擬似的に付与して強制適用 */}
+                {/* スマホ用背景地蔵：％指定に変更し、強制的に広げる */}
                 <div className="absolute inset-0 flex justify-center items-center md:hidden opacity-30 pointer-events-none">
                   <img 
                     src={JIZO_IPHONE} 
                     alt="" 
                     style={{ 
-                      width: '290px', 
-                      minWidth: '290px', 
-                      maxWidth: 'none', 
+                      width: '80%', 
+                      maxWidth: '80%', 
                       height: 'auto',
-                      transform: 'translateY(20px)' 
+                      objectFit: 'contain'
                     }} 
-                    className="object-contain" 
                   />
                 </div>
 
@@ -174,7 +171,7 @@ function App() {
                   <img 
                     src={JIZO_DESKTOP} 
                     alt="" 
-                    style={{ width: '380px', minWidth: '380px', maxWidth: 'none', height: 'auto' }} 
+                    style={{ width: '100%', maxWidth: '350px', height: 'auto' }} 
                     className="object-contain" 
                   />
                 </div>
