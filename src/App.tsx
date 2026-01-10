@@ -20,7 +20,7 @@ function App() {
   const [content, setContent] = useState('');
   const [selectedOffering, setSelectedOffering] = useState<'none' | 'omusubi' | 'dango'>('none');
   const [offeringEffect, setOfferingEffect] = useState<'none' | 'omusubi' | 'dango'>('none');
-  const [jizoMessage, setJizoMessage] = useState('');
+  const [offeringMessage, setOfferingMessage] = useState('');
 
   const [submitting, setSubmitting] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -50,7 +50,18 @@ function App() {
     audio.volume = 0.2;
     audio.setAttribute('playsinline', 'true');
     audioRef.current = audio;
-    return () => { if (audioRef.current) audioRef.current.pause(); };
+
+    const channel = supabase
+      .channel('realtime-posts')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'gratitude_posts' }, () => {
+        fetchPosts(); 
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+      if (audioRef.current) audioRef.current.pause();
+    };
   }, []);
 
   const toggleFavorite = (id: string) => {
@@ -65,7 +76,6 @@ function App() {
     setSubmitting(true);
 
     try {
-      // お供え物をする場合のメッセージ分岐
       let customReply = "";
       if (selectedOffering === 'omusubi') {
         customReply = "おむすび、ありがたく。心がお腹いっぱいになります。";
@@ -78,7 +88,7 @@ function App() {
         .insert([{ 
           name: name.trim(), 
           content: content.trim(),
-          ai_reply: customReply || null // お供えがある時だけ上書き
+          ai_reply: customReply || null 
         }])
         .select(); 
       
@@ -90,7 +100,6 @@ function App() {
         setMyPostIds(newMyPosts);
         localStorage.setItem('jizo_my_posts', JSON.stringify(newMyPosts));
         
-        // 功徳とお供え追加ロジック
         const newVirtue = virtue + 1;
         setVirtue(newVirtue);
         localStorage.setItem('jizo_virtue', String(newVirtue));
@@ -106,20 +115,23 @@ function App() {
           localStorage.setItem('jizo_dango', String(newD));
         }
 
-        // お供えを消費
         if (selectedOffering === 'omusubi') {
-          const nextO = omusubiCount - 1;
-          setOmusubiCount(nextO);
-          localStorage.setItem('jizo_omusubi', String(nextO));
+          setOmusubiCount(prev => prev - 1);
+          localStorage.setItem('jizo_omusubi', String(omusubiCount - 1));
         } else if (selectedOffering === 'dango') {
-          const nextD = dangoCount - 1;
-          setDangoCount(nextD);
-          localStorage.setItem('jizo_dango', String(nextD));
+          setDangoCount(prev => prev - 1);
+          localStorage.setItem('jizo_dango', String(dangoCount - 1));
         }
 
-        // 演出セット
-        setOfferingEffect(selectedOffering);
-        setJizoMessage(customReply || "灯火を、確かに。");
+        // お供え演出をセット（お供えがある場合のみ）
+        if (selectedOffering !== 'none') {
+          setOfferingEffect(selectedOffering);
+          setOfferingMessage(customReply);
+          setTimeout(() => {
+            setOfferingEffect('none');
+            setOfferingMessage('');
+          }, 5000); // 5秒で演出を終了
+        }
       }
 
       await new Promise(resolve => setTimeout(resolve, 800));
@@ -143,8 +155,8 @@ function App() {
 
   const NavLinks = () => (
     <div className="flex justify-center gap-12">
-      <button onClick={() => setViewMode('all')} className={`text-xs tracking-[0.2em] transition-colors pb-1 ${viewMode === 'all' ? 'text-text-primary border-b border-text-primary' : 'text-text-tertiary hover:text-text-secondary'}`}>みんなの灯火</button>
-      <button onClick={() => setViewMode('mypage')} className={`text-xs tracking-[0.2em] transition-colors pb-1 ${viewMode === 'mypage' ? 'text-text-primary border-b border-text-primary' : 'text-text-tertiary hover:text-text-secondary'}`}>心覚えの部屋</button>
+      <button onClick={() => { setViewMode('all'); setHasInteracted(false); }} className={`text-xs tracking-[0.2em] transition-colors pb-1 ${viewMode === 'all' ? 'text-text-primary border-b border-text-primary' : 'text-text-tertiary hover:text-text-secondary'}`}>みんなの灯火</button>
+      <button onClick={() => { setViewMode('mypage'); setHasInteracted(false); }} className={`text-xs tracking-[0.2em] transition-colors pb-1 ${viewMode === 'mypage' ? 'text-text-primary border-b border-text-primary' : 'text-text-tertiary hover:text-text-secondary'}`}>心覚えの部屋</button>
     </div>
   );
 
@@ -157,8 +169,8 @@ function App() {
         .scrolling-container { overflow: hidden; position: relative; }
         .scrolling-content { display: flex; flex-direction: column; animation: scrollText 45s linear infinite; }
         .fill-1 { font-variation-settings: 'FILL' 1; }
-        .fade-in { animation: fadeIn 1.2s ease forwards; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .fade-in { animation: fadeIn 1s ease forwards; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
       `}</style>
 
       <nav className="md:hidden py-5 border-b border-border/10 sticky top-0 bg-bg-primary/90 backdrop-blur-md z-50"><NavLinks /></nav>
@@ -191,38 +203,30 @@ function App() {
             </div>
           ) : (
             <div className="w-full max-w-4xl mb-16 relative">
-              {/* お供え演出レイヤー */}
-              {(offeringEffect !== 'none' || hasInteracted) && (
-                <div className="absolute inset-0 z-30 flex flex-col items-center justify-start pt-10 pointer-events-none fade-in">
-                  {offeringEffect !== 'none' && (
-                    <img 
-                      src={offeringEffect === 'omusubi' ? IMG_OMUSUBI : IMG_DANGO} 
-                      className="w-24 h-24 sm:w-32 sm:h-32 object-contain mt-20 sm:mt-32 drop-shadow-lg" 
-                      style={{ filter: 'drop-shadow(0 0 10px white)' }}
-                      alt="お供え物"
-                    />
-                  )}
-                  {jizoMessage && (
-                    <div className="mt-4 bg-white/80 backdrop-blur px-6 py-3 rounded-full border border-border/50 text-sm tracking-widest font-mincho">
-                      {jizoMessage}
+              
+              {/* お供え演出中のみ表示されるレイヤー */}
+              {offeringEffect !== 'none' && (
+                <div className="absolute inset-0 z-40 flex flex-col items-center justify-center pointer-events-none fade-in">
+                  <img 
+                    src={offeringEffect === 'omusubi' ? IMG_OMUSUBI : IMG_DANGO} 
+                    className="w-24 h-24 sm:w-32 sm:h-32 object-contain drop-shadow-xl" 
+                    alt="お供え物"
+                  />
+                  {offeringMessage && (
+                    <div className="mt-4 bg-white/90 px-6 py-2 rounded-full shadow-sm text-sm tracking-widest font-mincho text-[#4a4030]">
+                      {offeringMessage}
                     </div>
                   )}
                 </div>
               )}
 
-              {/* 通常時のお地蔵様と文章 */}
-              {!showForm && !hasInteracted && (
+              {/* お地蔵様とメッセージ本体 */}
+              {!showForm && (
                 <>
                   <div className="flex flex-col items-center md:hidden gap-6">
                     <div className="w-[140px]"><img src={JIZO_DESKTOP} alt="地蔵" className="w-full h-auto object-contain" /></div>
                     <div className="w-full bg-white/30 border border-border/30 rounded-xl scrolling-container" style={{ height: '200px' }}>
                       <div className="scrolling-content px-8 py-6 space-y-12 text-[15px] leading-relaxed tracking-wider text-left text-text-secondary">
-                        <div className="space-y-8">
-                          <p>今日という一日を、そっと振り返ってみる。</p>
-                          <p>特別なことがなくても、いつもの場所にいつものものがちゃんとあって、誰かのささやかな親切や、自分だけが知っている小さな頑張りが、気づけば心を支えてくれていたりする。</p>
-                          <p>そのぬくもりを手のひらで包むような気持ちで、ありがとうの気持ちを静かに押し出してみる。</p>
-                          <p>言葉は、あとからゆっくりついてくる。<br />まずはここに、今日のありがとうを、小さく灯してみませんか。</p>
-                        </div>
                         <div className="space-y-8">
                           <p>今日という一日を、そっと振り返ってみる。</p>
                           <p>特別なことがなくても、いつもの場所にいつものものがちゃんとあって、誰かのささやかな親切や、自分だけが知っている小さな頑張りが、気づけば心を支えてくれていたりする。</p>
@@ -252,7 +256,7 @@ function App() {
             <div className="w-full max-w-lg mb-12" ref={formRef}>
               {!showForm ? (
                 <div className="space-y-6 flex flex-col items-center">
-                  <button onClick={() => { setShowForm(true); setHasInteracted(false); setOfferingEffect('none'); if (audioRef.current && !isMuted) audioRef.current.play().catch(() => {}); }} className="bg-[#4a4030] hover:bg-[#3d3428] text-white w-full font-medium shadow-lg text-lg py-5 rounded-lg transition-colors tracking-widest">ありがとうを灯す</button>
+                  <button onClick={() => { setShowForm(true); setHasInteracted(false); if (audioRef.current && !isMuted) audioRef.current.play().catch(() => {}); }} className="bg-[#4a4030] hover:bg-[#3d3428] text-white w-full font-medium shadow-lg text-lg py-5 rounded-lg transition-colors tracking-widest">ありがとうを灯す</button>
                   <button type="button" onClick={() => { setIsMuted(!isMuted); if (audioRef.current) !isMuted ? audioRef.current.pause() : audioRef.current.play().catch(() => {}); }} className="flex items-center gap-2 text-text-tertiary hover:text-text-secondary transition-colors">
                     <span className="material-symbols-outlined text-xl">{isMuted ? 'music_note' : 'music_off'}</span>
                     <span className="text-[10px] tracking-widest uppercase">{isMuted ? 'Play BGM' : 'Mute BGM'}</span>
@@ -269,29 +273,20 @@ function App() {
                     <textarea value={content} onChange={(e) => setContent(e.target.value)} rows={6} className="input-base resize-none text-base bg-white py-3 outline-none" required />
                   </div>
                   
-                  {/* お供え物選択（所持している時のみ表示） */}
                   {(omusubiCount > 0 || dangoCount > 0) && (
                     <div className="pt-2 border-t border-border/10">
-                      <p className="text-[10px] tracking-widest text-text-tertiary mb-4 text-center">お供え物を添える（任意）</p>
+                      <p className="text-[10px] tracking-widest text-text-tertiary mb-4 text-center uppercase">お供え物を添える</p>
                       <div className="flex justify-center gap-8">
                         {omusubiCount > 0 && (
-                          <button 
-                            type="button" 
-                            onClick={() => setSelectedOffering(selectedOffering === 'omusubi' ? 'none' : 'omusubi')}
-                            className={`flex flex-col items-center transition-all ${selectedOffering === 'omusubi' ? 'scale-110 opacity-100' : 'opacity-40 hover:opacity-70'}`}
-                          >
+                          <button type="button" onClick={() => setSelectedOffering(selectedOffering === 'omusubi' ? 'none' : 'omusubi')} className={`flex flex-col items-center transition-all ${selectedOffering === 'omusubi' ? 'scale-110 opacity-100' : 'opacity-30 hover:opacity-60'}`}>
                             <img src={IMG_OMUSUBI} alt="おむすび" className="w-10 h-10 mb-1" />
-                            <span className="text-[9px]">おむすび({omusubiCount})</span>
+                            <span className="text-[8px] tracking-tighter">おむすび({omusubiCount})</span>
                           </button>
                         )}
                         {dangoCount > 0 && (
-                          <button 
-                            type="button" 
-                            onClick={() => setSelectedOffering(selectedOffering === 'dango' ? 'none' : 'dango')}
-                            className={`flex flex-col items-center transition-all ${selectedOffering === 'dango' ? 'scale-110 opacity-100' : 'opacity-40 hover:opacity-70'}`}
-                          >
+                          <button type="button" onClick={() => setSelectedOffering(selectedOffering === 'dango' ? 'none' : 'dango')} className={`flex flex-col items-center transition-all ${selectedOffering === 'dango' ? 'scale-110 opacity-100' : 'opacity-30 hover:opacity-60'}`}>
                             <img src={IMG_DANGO} alt="お団子" className="w-10 h-10 mb-1" />
-                            <span className="text-[9px]">お団子({dangoCount})</span>
+                            <span className="text-[8px] tracking-tighter">お団子({dangoCount})</span>
                           </button>
                         )}
                       </div>
@@ -308,7 +303,6 @@ function App() {
           )}
         </div>
 
-        {/* 投稿一覧 */}
         <div className="space-y-12 max-w-4xl mx-auto">
           {displayedPosts.length === 0 && viewMode === 'mypage' ? (
             <div className="text-center py-20 text-text-tertiary font-mincho tracking-widest animate-pulse">まだ記録がありません</div>
