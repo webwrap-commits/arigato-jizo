@@ -150,29 +150,35 @@ function App() {
 
           {!showForm && !hasInteracted && (
             <div className="w-full max-w-4xl mb-16">
-              <div className="relative flex flex-col md:flex-row items-center gap-8 md:gap-16 bg-white/20 p-8 md:p-12 rounded-2xl overflow-hidden min-h-[500px] md:min-h-0 border border-border/30">
-                {/* スマホ用背景地蔵：flex-shrink-0 を追加して、親要素による圧縮を禁止 */}
-                <div className="absolute inset-0 flex justify-center items-end md:hidden opacity-35 pointer-events-none">
-                  <div className="flex-shrink-0">
-                    <img 
-                      src={JIZO_IPHONE} 
-                      alt="" 
-                      style={{ width: '290px', height: 'auto', display: 'block' }} 
-                      className="object-contain" 
-                    />
-                  </div>
+              {/* overflow-hiddenを解除し、中身が自由なサイズになれるように調整 */}
+              <div className="relative flex flex-col md:flex-row items-center gap-8 md:gap-16 bg-white/20 p-8 md:p-12 rounded-2xl min-h-[500px] md:min-h-0 border border-border/30">
+                
+                {/* スマホ用背景地蔵：サイズ指定に !important を擬似的に付与して強制適用 */}
+                <div className="absolute inset-0 flex justify-center items-center md:hidden opacity-30 pointer-events-none">
+                  <img 
+                    src={JIZO_IPHONE} 
+                    alt="" 
+                    style={{ 
+                      width: '290px', 
+                      minWidth: '290px', 
+                      maxWidth: 'none', 
+                      height: 'auto',
+                      transform: 'translateY(20px)' 
+                    }} 
+                    className="object-contain" 
+                  />
                 </div>
-                {/* デスクトップ用地蔵：こちらも同様の対策 */}
+
+                {/* デスクトップ用地蔵 */}
                 <div className="hidden md:flex justify-start items-center md:w-2/5 pointer-events-none">
-                  <div className="flex-shrink-0">
-                    <img 
-                      src={JIZO_DESKTOP} 
-                      alt="" 
-                      style={{ width: '380px', height: 'auto', display: 'block' }} 
-                      className="object-contain" 
-                    />
-                  </div>
+                  <img 
+                    src={JIZO_DESKTOP} 
+                    alt="" 
+                    style={{ width: '380px', minWidth: '380px', maxWidth: 'none', height: 'auto' }} 
+                    className="object-contain" 
+                  />
                 </div>
+
                 <div className="relative z-10 flex-1 text-left space-y-8 leading-relaxed opacity-95 text-[15px] sm:text-base tracking-wider">
                   <p>今日という一日を、そっと振り返ってみる。</p>
                   <p>特別なことがなくても、いつもの場所にいつものものがちゃんとあって、誰かのささやかな親切や、自分だけが知っている小さな頑張りが、気づけば心を支えてくれていたりする。</p>
