@@ -151,13 +151,23 @@ function App() {
           {!showForm && !hasInteracted && (
             <div className="w-full max-w-4xl mb-16">
               <div className="relative flex flex-col md:flex-row items-center gap-8 md:gap-16 bg-white/20 p-8 md:p-12 rounded-2xl overflow-hidden min-h-[480px] md:min-h-0 border border-border/30">
-                {/* スマホ用背景地蔵：ご希望に合わせて 290px に設定 */}
-                <div className="absolute inset-0 flex justify-center items-end md:hidden opacity-35 pointer-events-none pb-0">
-                  <img src={JIZO_IPHONE} alt="" style={{ width: '290px', height: 'auto' }} className="object-contain" />
+                {/* スマホ用背景地蔵：サイズを固定し、親要素の影響を受けないように修正 */}
+                <div className="absolute inset-0 flex justify-center items-end md:hidden opacity-35 pointer-events-none">
+                  <img 
+                    src={JIZO_IPHONE} 
+                    alt="" 
+                    style={{ width: '290px', minWidth: '290px', maxWidth: '290px', height: 'auto' }} 
+                    className="object-contain" 
+                  />
                 </div>
                 {/* デスクトップ用地蔵 */}
                 <div className="hidden md:flex justify-start items-center md:w-2/5 pointer-events-none">
-                  <img src={JIZO_DESKTOP} alt="" style={{ width: '100%', maxWidth: '380px' }} className="h-auto object-contain" />
+                  <img 
+                    src={JIZO_DESKTOP} 
+                    alt="" 
+                    style={{ width: '380px', minWidth: '380px', maxWidth: '380px', height: 'auto' }} 
+                    className="object-contain" 
+                  />
                 </div>
                 <div className="relative z-10 flex-1 text-left space-y-8 leading-relaxed opacity-95 text-[15px] sm:text-base tracking-wider">
                   <p>今日という一日を、そっと振り返ってみる。</p>
