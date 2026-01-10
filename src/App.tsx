@@ -21,7 +21,6 @@ function App() {
   const [offeringEffect, setOfferingEffect] = useState<'none' | 'omusubi' | 'dango'>('none');
   const [offeringMessage, setOfferingMessage] = useState('');
 
-  // 編集用の状態
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editContent, setEditContent] = useState('');
 
@@ -165,7 +164,6 @@ function App() {
     } catch (error) { console.error("Submit error:", error); } finally { setSubmitting(false); }
   };
 
-  // 編集保存の処理
   const handleUpdate = async (id: string) => {
     if (!editContent.trim()) return;
     try {
@@ -354,17 +352,8 @@ function App() {
             <div className="text-center py-20 text-text-tertiary font-mincho tracking-widest">まだ記録がありません</div>
           ) : (
             displayedPosts.map((post: GratitudePost) => (
-              <article key={post.id} className="group relative border border-border rounded-lg overflow-hidden bg-white shadow-subtle">
-                <div className="absolute top-4 right-4 flex gap-4 opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity z-20">
-                  {/* 自分の投稿なら編集ボタンを表示 */}
-                  {myPostIds.includes(post.id) && (
-                    <button 
-                      onClick={() => { setEditingId(post.id); setEditContent(post.content); }}
-                      className="text-text-tertiary hover:text-[#4a4030] transition-colors"
-                    >
-                      <span className="material-symbols-outlined text-lg">edit_note</span>
-                    </button>
-                  )}
+              <article key={post.id} className="relative border border-border rounded-lg overflow-hidden bg-white shadow-subtle">
+                <div className="absolute top-4 right-4 flex gap-4 z-20">
                   <button onClick={() => toggleFavorite(post.id)} className={`${favoriteIds.includes(post.id) ? 'text-red-400' : 'text-text-tertiary hover:text-red-300'} transition-colors`}>
                     <span className={`material-symbols-outlined text-lg ${favoriteIds.includes(post.id) ? 'fill-1' : ''}`}>favorite</span>
                   </button>
@@ -392,7 +381,21 @@ function App() {
                         </div>
                       </div>
                     ) : (
-                      <p className="whitespace-pre-wrap leading-loose text-sm sm:text-base opacity-90">{post.content}</p>
+                      <>
+                        <p className="whitespace-pre-wrap leading-loose text-sm sm:text-base opacity-90">{post.content}</p>
+                        {/* 自分の投稿かつ編集中でない場合に編集ボタンを表示 */}
+                        {myPostIds.includes(post.id) && (
+                          <div className="mt-4 flex justify-end">
+                            <button 
+                              onClick={() => { setEditingId(post.id); setEditContent(post.content); }}
+                              className="flex items-center gap-1 text-[10px] tracking-widest text-text-tertiary border-b border-border hover:text-text-secondary transition-colors pb-0.5"
+                            >
+                              <span className="material-symbols-outlined text-xs">edit</span>
+                              <span>編集する</span>
+                            </button>
+                          </div>
+                        )}
+                      </>
                     )}
                   </div>
                 </div>
