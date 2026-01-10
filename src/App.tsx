@@ -48,7 +48,18 @@ function App() {
     audio.volume = 0.2;
     audio.setAttribute('playsinline', 'true');
     audioRef.current = audio;
-    return () => { if (audioRef.current) audioRef.current.pause(); };
+
+    const channel = supabase
+      .channel('realtime-posts')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'gratitude_posts' }, () => {
+        fetchPosts(); 
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+      if (audioRef.current) audioRef.current.pause();
+    };
   }, []);
 
   const toggleFavorite = (id: string) => {
@@ -105,6 +116,9 @@ function App() {
           }
           setOfferingEffect(selectedOffering);
           setOfferingMessage(customReply);
+        } else {
+          setOfferingEffect('none');
+          setOfferingMessage('');
         }
       }
 
@@ -112,10 +126,18 @@ function App() {
       setContent('');
       setSelectedOffering('none');
       setShowForm(false);
-      setHasInteracted(true); // これで演出画面（お地蔵様のみ）に切り替え
+      setHasInteracted(true); 
       await fetchPosts();
     } catch (error) { console.error("Submit error:", error); } finally { setSubmitting(false); }
   };
+
+  // --- 修正: 表示する投稿をフィルタリングするロジックを再追加 ---
+  const displayedPosts = posts.filter((post: GratitudePost) => {
+    if (viewMode === 'all') return true;
+    if (myTab === 'posts') return myPostIds.includes(post.id);
+    if (myTab === 'favorites') return favoriteIds.includes(post.id);
+    return true;
+  });
 
   if (loading) return <div className="min-h-screen bg-bg-primary flex items-center justify-center text-sm">読み込み中...</div>;
 
@@ -134,8 +156,9 @@ function App() {
         @keyframes scrollText { 0% { transform: translateY(0); } 100% { transform: translateY(-50%); } }
         .scrolling-container { overflow: hidden; position: relative; }
         .scrolling-content { display: flex; flex-direction: column; animation: scrollText 45s linear infinite; }
-        .fade-in { animation: fadeIn 1.2s ease forwards; }
+        .fade-in { animation: fadeIn 1s ease forwards; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .fill-1 { font-variation-settings: 'FILL' 1; }
       `}</style>
 
       <nav className="md:hidden py-5 border-b border-border/10 sticky top-0 bg-bg-primary/90 backdrop-blur-md z-50"><NavLinks /></nav>
@@ -168,7 +191,6 @@ function App() {
             </div>
           ) : (
             <div className="w-full max-w-4xl mb-16 relative flex flex-col items-center">
-              {/* 演出モード、または初期メッセージ */}
               {hasInteracted ? (
                 <div className="flex flex-col items-center fade-in py-10 relative">
                   <div className="relative w-[200px] sm:w-[280px]">
@@ -278,7 +300,7 @@ function App() {
           {displayedPosts.length === 0 && viewMode === 'mypage' ? (
             <div className="text-center py-20 text-text-tertiary font-mincho tracking-widest">まだ記録がありません</div>
           ) : (
-            displayedPosts.map((post) => (
+            displayedPosts.map((post: GratitudePost) => (
               <article key={post.id} className="group relative border border-border rounded-lg overflow-hidden bg-white shadow-subtle">
                 <div className="absolute top-4 right-4 flex gap-4 opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity z-20">
                   <button onClick={() => toggleFavorite(post.id)} className={`${favoriteIds.includes(post.id) ? 'text-red-400' : 'text-text-tertiary hover:text-red-300'} transition-colors`}>
