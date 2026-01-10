@@ -111,14 +111,19 @@ function App() {
     <div className="min-h-screen bg-bg-primary font-gothic font-extralight text-text-primary relative" ref={topRef}>
       <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
 
-      {/* エンドロールアニメーションの定義 */}
       <style>{`
         @keyframes scrollText {
-          0% { transform: translateY(100%); }
-          100% { transform: translateY(-100%); }
+          0% { transform: translateY(0); }
+          100% { transform: translateY(-50%); }
+        }
+        .scrolling-container {
+          overflow: hidden;
+          position: relative;
         }
         .scrolling-content {
-          animation: scrollText 25s linear infinite;
+          display: flex;
+          flex-direction: column;
+          animation: scrollText 45s linear infinite;
         }
       `}</style>
 
@@ -129,30 +134,31 @@ function App() {
           {!showForm && !hasInteracted && (
             <div className="w-full max-w-4xl mb-16">
               
-              {/* --- スマホ専用レイアウト (md未満で表示) --- */}
               <div className="flex flex-col items-center md:hidden gap-6">
-                {/* 1. お地蔵様 (一回り小さく、ハッキリした色) */}
                 <div className="w-[140px] pointer-events-none">
                   <img src={JIZO_DESKTOP} alt="地蔵" className="w-full h-auto object-contain" />
                 </div>
 
-                {/* 2. メッセージボード (高さを制限し、エンドロールさせる) */}
-                <div className="w-full bg-white/30 border border-border/30 rounded-xl overflow-hidden relative" style={{ height: '180px' }}>
-                  <div className="absolute inset-0 scrolling-content px-8 py-4 space-y-8 text-[15px] leading-relaxed tracking-wider text-left">
-                    <p>今日という一日を、そっと振り返ってみる。</p>
-                    <p>特別なことがなくても、いつもの場所にいつものものがちゃんとあって、誰かのささやかな親切や、自分だけが知っている小さな頑張りが、気づけば心を支えてくれていたりする。</p>
-                    <p>そのぬくもりを手のひらで包むような気持ちで、ありがとうの気持ちを静かに押し出してみる。</p>
-                    <p>言葉は、あとからゆっくりついてくる。<br />まずはここに、今日のありがとうを、小さく灯してみませんか。</p>
-                    {/* ループを滑らかにするための余白 */}
-                    <div className="h-[100px]"></div>
+                <div className="w-full bg-white/30 border border-border/30 rounded-xl scrolling-container" style={{ height: '200px' }}>
+                  <div className="scrolling-content px-8 py-6 space-y-12 text-[15px] leading-relaxed tracking-wider text-left">
+                    <div className="space-y-8">
+                      <p>今日という一日を、そっと振り返ってみる。</p>
+                      <p>特別なことがなくても、いつもの場所にいつものものがちゃんとあって、誰かのささやかな親切や、自分だけが知っている小さな頑張りが、気づけば心を支えてくれていたりする。</p>
+                      <p>そのぬくもりを手のひらで包むような気持ちで、ありがとうの気持ちを静かに押し出してみる。</p>
+                      <p>言葉は、あとからゆっくりついてくる。<br />まずはここに、今日のありがとうを、小さく灯してみませんか。</p>
+                    </div>
+                    <div className="space-y-8">
+                      <p>今日という一日を、そっと振り返ってみる。</p>
+                      <p>特別なことがなくても、いつもの場所にいつものものがちゃんとあって、誰かのささやかな親切や、自分だけが知っている小さな頑張りが、気づけば心を支えてくれていたりする。</p>
+                      <p>そのぬくもりを手のひらで包むような気持ちで、ありがとうの気持ちを静かに押し出してみる。</p>
+                      <p>言葉は、あとからゆっくりついてくる。<br />まずはここに、今日のありがとうを、小さく灯してみませんか。</p>
+                    </div>
                   </div>
-                  {/* 上下にうっすらグラデーション（文字が消えていく演出） */}
-                  <div className="absolute inset-x-0 top-0 h-8 bg-gradient-to-b from-bg-primary/50 to-transparent pointer-events-none"></div>
-                  <div className="absolute inset-x-0 bottom-0 h-8 bg-gradient-to-t from-bg-primary/50 to-transparent pointer-events-none"></div>
+                  <div className="absolute inset-x-0 top-0 h-12 bg-gradient-to-b from-bg-primary/60 to-transparent pointer-events-none z-10"></div>
+                  <div className="absolute inset-x-0 bottom-0 h-12 bg-gradient-to-t from-bg-primary/60 to-transparent pointer-events-none z-10"></div>
                 </div>
               </div>
 
-              {/* --- デスクトップ用レイアウト (md以上で表示) --- */}
               <div className="hidden md:flex flex-row items-center gap-16 bg-white/20 p-12 rounded-2xl border border-border/30">
                 <div className="flex justify-start items-center w-2/5 pointer-events-none">
                   <img src={JIZO_DESKTOP} alt="" style={{ width: '380px', height: 'auto' }} className="object-contain" />
@@ -164,11 +170,9 @@ function App() {
                   <p>言葉は、あとからゆっくりついてくる。<br />まずはここに、今日のありがとうを、小さく灯してみませんか。</p>
                 </div>
               </div>
-
             </div>
           )}
 
-          {/* フォームやボタンなどの共通パーツ */}
           <div className="w-full max-w-lg mb-12" ref={formRef}>
             {!showForm ? (
               <div className="space-y-6 flex flex-col items-center">
@@ -203,7 +207,6 @@ function App() {
           </div>
         </div>
 
-        {/* 投稿一覧 (ai_reply 復活済み) */}
         <div className="space-y-12 max-w-4xl mx-auto">
           {posts.map((post) => (
             <article key={post.id} className="border border-border rounded-lg overflow-hidden bg-white shadow-subtle">
