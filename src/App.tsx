@@ -36,7 +36,6 @@ function App() {
 
   useEffect(() => {
     fetchPosts();
-
     const audio = new Audio(BGM_URL);
     audio.loop = true;
     audio.volume = 0.2;
@@ -138,6 +137,16 @@ function App() {
   return (
     <div className="min-h-screen bg-bg-primary font-gothic font-extralight text-text-primary relative" ref={topRef}>
       <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
+      
+      {/* 外部CSSの強制上書き用スタイル */}
+      <style>{`
+        .force-jizo-size {
+          width: 290px !important;
+          min-width: 290px !important;
+          max-width: 290px !important;
+          height: auto !important;
+        }
+      `}</style>
 
       <div className="max-w-site mx-auto px-6 py-12 sm:py-20">
         <div className="flex flex-col items-center mb-10 sm:mb-16">
@@ -150,19 +159,14 @@ function App() {
 
           {!showForm && !hasInteracted && (
             <div className="w-full max-w-4xl mb-16">
-              <div className="relative flex flex-col md:flex-row items-center gap-8 md:gap-16 bg-white/20 p-8 md:p-12 rounded-2xl min-h-[450px] md:min-h-0 border border-border/30">
+              <div className="relative flex flex-col md:flex-row items-center gap-8 md:gap-16 bg-white/20 p-8 md:p-12 rounded-2xl min-h-[500px] md:min-h-0 border border-border/30 overflow-visible">
                 
-                {/* スマホ用背景地蔵：％指定に変更し、強制的に広げる */}
+                {/* スマホ用背景地蔵：強制クラスを適用 */}
                 <div className="absolute inset-0 flex justify-center items-center md:hidden opacity-30 pointer-events-none">
                   <img 
                     src={JIZO_IPHONE} 
                     alt="" 
-                    style={{ 
-                      width: '80%', 
-                      maxWidth: '80%', 
-                      height: 'auto',
-                      objectFit: 'contain'
-                    }} 
+                    className="force-jizo-size object-contain" 
                   />
                 </div>
 
@@ -171,7 +175,7 @@ function App() {
                   <img 
                     src={JIZO_DESKTOP} 
                     alt="" 
-                    style={{ width: '100%', maxWidth: '350px', height: 'auto' }} 
+                    style={{ width: '380px', height: 'auto' }} 
                     className="object-contain" 
                   />
                 </div>
@@ -186,13 +190,11 @@ function App() {
             </div>
           )}
 
+          {/* 以下、ボタンやフォームなどのコード（変更なし） */}
           <div className="w-full max-w-lg mb-12" ref={formRef}>
             {!showForm ? (
               <div className="space-y-6 flex flex-col items-center">
-                <button
-                  onClick={handleShowForm}
-                  className="bg-[#4a4030] hover:bg-[#3d3428] text-white w-full font-medium shadow-lg text-lg py-5 rounded-lg transition-colors tracking-widest"
-                >
+                <button onClick={handleShowForm} className="bg-[#4a4030] hover:bg-[#3d3428] text-white w-full font-medium shadow-lg text-lg py-5 rounded-lg transition-colors tracking-widest">
                   ありがとうを灯す
                 </button>
                 <button type="button" onClick={toggleMute} className="flex items-center gap-2 text-text-tertiary hover:text-text-secondary transition-colors">
@@ -236,12 +238,9 @@ function App() {
                 <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full flex-shrink-0 overflow-hidden bg-[#fafaf5] border border-border/40 shadow-inner flex items-center justify-center">
                   <img src={CANDLE_GIF} alt="灯" className="w-[140%] h-[140%] object-cover mix-blend-multiply opacity-90" />
                 </div>
-                
                 <div className="flex-1 w-full">
                   <div className="flex items-baseline gap-4 text-[10px] sm:text-xs mb-5">
-                    <time className="text-text-secondary">
-                      {new Date(post.created_at).toLocaleDateString('ja-JP', { year: 'numeric', month: 'long', day: 'numeric' })}
-                    </time>
+                    <time className="text-text-secondary">{new Date(post.created_at).toLocaleDateString('ja-JP', { year: 'numeric', month: 'long', day: 'numeric' })}</time>
                     <span className="font-mincho tracking-wide text-text-secondary">{post.name}</span>
                   </div>
                   <p className="whitespace-pre-wrap leading-loose text-sm sm:text-base opacity-90">{post.content}</p>
