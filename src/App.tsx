@@ -5,7 +5,15 @@ function App() {
   const [posts, setPosts] = useState<GratitudePost[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [hasInteracted, setHasInteracted] = useState(false);
-  const [name, setName] = useState('');
+
+  // --- ローカルストレージ関連の初期化 ---
+  const [name, setName] = useState(() => localStorage.getItem('jizo_name') || '');
+  const [myPostIds, setMyPostIds] = useState<string[]>(() => JSON.parse(localStorage.getItem('jizo_my_posts') || '[]'));
+  const [favoriteIds, setFavoriteIds] = useState<string[]>(() => JSON.parse(localStorage.getItem('jizo_favorites') || '[]'));
+  const [virtue, setVirtue] = useState(() => Number(localStorage.getItem('jizo_virtue')) || 0);
+  const [viewMode, setViewMode] = useState<'all' | 'mypage'>('all');
+  const [myTab, setMyTab] = useState<'posts' | 'favorites'>('posts');
+
   const [content, setContent] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -57,28 +65,12 @@ function App() {
     };
   }, []);
 
-  const playBGM = () => {
-    if (audioRef.current && !isMuted) {
-      audioRef.current.play().catch(() => {});
-    }
-  };
-
-  const toggleMute = () => {
-    if (!isMuted) {
-      setIsMuted(true);
-      if (audioRef.current) audioRef.current.pause();
-    } else {
-      setIsMuted(false);
-      if (showForm || hasInteracted) playBGM();
-    }
-  };
-
-  const handleShowForm = () => {
-    setShowForm(true);
-    playBGM();
-    setTimeout(() => {
-      formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }, 100);
+  const toggleFavorite = (id: string) => {
+    const newFavorites = favoriteIds.includes(id)
+      ? favoriteIds.filter(favId => favId !== id)
+      : [...favoriteIds, id];
+    setFavoriteIds(newFavorites);
+    localStorage.setItem('jizo_favorites', JSON.stringify(newFavorites));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -86,13 +78,24 @@ function App() {
     if (!content.trim() || !name.trim() || submitting) return;
     setSubmitting(true);
     try {
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('gratitude_posts')
         .insert([{ name: name.trim(), content: content.trim() }])
         .select(); 
+      
       if (error) throw error;
+
+      if (data && data[0]) {
+        localStorage.setItem('jizo_name', name.trim());
+        const newMyPosts = [...myPostIds, data[0].id];
+        setMyPostIds(newMyPosts);
+        localStorage.setItem('jizo_my_posts', JSON.stringify(newMyPosts));
+        const newVirtue = virtue + 1;
+        setVirtue(newVirtue);
+        localStorage.setItem('jizo_virtue', String(newVirtue));
+      }
+
       await new Promise(resolve => setTimeout(resolve, 800));
-      setName('');
       setContent('');
       setShowForm(false);
       setHasInteracted(true); 
@@ -105,139 +108,187 @@ function App() {
     }
   };
 
+  const displayedPosts = posts.filter(post => {
+    if (viewMode === 'all') return true;
+    if (myTab === 'posts') return myPostIds.includes(post.id);
+    if (myTab === 'favorites') return favoriteIds.includes(post.id);
+    return true;
+  });
+
   if (loading) return <div className="min-h-screen bg-bg-primary flex items-center justify-center font-gothic text-text-secondary text-sm">読み込み中...</div>;
 
   return (
     <div className="min-h-screen bg-bg-primary font-gothic font-extralight text-text-primary relative" ref={topRef}>
-      <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
+      <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20,400,0,0" />
 
       <style>{`
         @keyframes scrollText {
           0% { transform: translateY(0); }
           100% { transform: translateY(-50%); }
         }
-        .scrolling-container {
-          overflow: hidden;
-          position: relative;
-        }
-        .scrolling-content {
-          display: flex;
-          flex-direction: column;
-          animation: scrollText 45s linear infinite;
-        }
+        .scrolling-container { overflow: hidden; position: relative; }
+        .scrolling-content { display: flex; flex-direction: column; animation: scrollText 45s linear infinite; }
+        .fill-1 { font-variation-settings: 'FILL' 1; }
       `}</style>
+
+      {/* ナビゲーション */}
+      <nav className="flex justify-center gap-12 py-5 border-b border-border/10 sticky top-0 bg-bg-primary/90 backdrop-blur-md z-50">
+        <button 
+          onClick={() => setViewMode('all')} 
+          className={`text-xs tracking-[0.2em] transition-colors ${viewMode === 'all' ? 'text-text-primary border-b border-text-primary' : 'text-text-tertiary hover:text-text-secondary'}`}
+        >
+          すべての灯火
+        </button>
+        <button 
+          onClick={() => setViewMode('mypage')} 
+          className={`text-xs tracking-[0.2em] transition-colors ${viewMode === 'mypage' ? 'text-text-primary border-b border-text-primary' : 'text-text-tertiary hover:text-text-secondary'}`}
+        >
+          心覚えの部屋
+        </button>
+      </nav>
 
       <div className="max-w-site mx-auto px-6 py-12 sm:py-20">
         <div className="flex flex-col items-center mb-10 sm:mb-16">
-          <h1 className="text-4xl sm:text-5xl font-mincho font-extralight mb-10 tracking-widest cursor-pointer" onClick={() => window.location.reload()}>ありがと地蔵</h1>
+          <h1 className="text-4xl sm:text-5xl font-mincho font-extralight mb-10 tracking-widest cursor-pointer" onClick={() => setViewMode('all')}>ありがと地蔵</h1>
 
-          {!showForm && !hasInteracted && (
-            <div className="w-full max-w-4xl mb-16">
-              
-              <div className="flex flex-col items-center md:hidden gap-6">
-                <div className="w-[140px] pointer-events-none">
-                  <img src={JIZO_DESKTOP} alt="地蔵" className="w-full h-auto object-contain" />
-                </div>
-
-                <div className="w-full bg-white/30 border border-border/30 rounded-xl scrolling-container" style={{ height: '200px' }}>
-                  <div className="scrolling-content px-8 py-6 space-y-12 text-[15px] leading-relaxed tracking-wider text-left">
-                    <div className="space-y-8">
-                      <p>今日という一日を、そっと振り返ってみる。</p>
-                      <p>特別なことがなくても、いつもの場所にいつものものがちゃんとあって、誰かのささやかな親切や、自分だけが知っている小さな頑張りが、気づけば心を支えてくれていたりする。</p>
-                      <p>そのぬくもりを手のひらで包むような気持ちで、ありがとうの気持ちを静かに押し出してみる。</p>
-                      <p>言葉は、あとからゆっくりついてくる。<br />まずはここに、今日のありがとうを、小さく灯してみませんか。</p>
-                    </div>
-                    <div className="space-y-8">
-                      <p>今日という一日を、そっと振り返ってみる。</p>
-                      <p>特別なことがなくても、いつもの場所にいつものものがちゃんとあって、誰かのささやかな親切や、自分だけが知っている小さな頑張りが、気づけば心を支えてくれていたりする。</p>
-                      <p>そのぬくもりを手のひらで包むような気持ちで、ありがとうの気持ちを静かに押し出してみる。</p>
-                      <p>言葉は、あとからゆっくりついてくる。<br />まずはここに、今日のありがとうを、小さく灯してみませんか。</p>
-                    </div>
-                  </div>
-                  <div className="absolute inset-x-0 top-0 h-12 bg-gradient-to-b from-bg-primary/60 to-transparent pointer-events-none z-10"></div>
-                  <div className="absolute inset-x-0 bottom-0 h-12 bg-gradient-to-t from-bg-primary/60 to-transparent pointer-events-none z-10"></div>
-                </div>
+          {viewMode === 'mypage' ? (
+            <div className="w-full max-w-lg mb-12 text-center">
+              <div className="bg-white/40 p-8 rounded-2xl border border-border/30 mb-8">
+                <div className="text-[10px] tracking-[0.2em] text-text-tertiary uppercase mb-2">積んだ功徳の数</div>
+                <div className="text-4xl font-mincho text-[#4a4030]">{virtue}</div>
               </div>
-
-              <div className="hidden md:flex flex-row items-center gap-16 bg-white/20 p-12 rounded-2xl border border-border/30">
-                <div className="flex justify-start items-center w-2/5 pointer-events-none">
-                  <img src={JIZO_DESKTOP} alt="" style={{ width: '380px', height: 'auto' }} className="object-contain" />
-                </div>
-                <div className="flex-1 text-left space-y-8 leading-relaxed opacity-95 text-base tracking-wider">
-                  <p>今日という一日を、そっと振り返ってみる。</p>
-                  <p>特別なことがなくても、いつもの場所にいつものものがちゃんとあって、誰かのささやかな親切や、自分だけが知っている小さな頑張りが、気づけば心を支えてくれていたりする。</p>
-                  <p>そのぬくもりを手のひらで包むような気持ちで、ありがとうの気持ちを静かに押し出してみる。</p>
-                  <p>言葉は、あとからゆっくりついてくる。<br />まずはここに、今日のありがとうを、小さく灯してみませんか。</p>
-                </div>
-              </div>
-            </div>
-          )}
-
-          <div className="w-full max-w-lg mb-12" ref={formRef}>
-            {!showForm ? (
-              <div className="space-y-6 flex flex-col items-center">
-                <button onClick={handleShowForm} className="bg-[#4a4030] hover:bg-[#3d3428] text-white w-full font-medium shadow-lg text-lg py-5 rounded-lg transition-colors tracking-widest">ありがとうを灯す</button>
-                <button type="button" onClick={toggleMute} className="flex items-center gap-2 text-text-tertiary hover:text-text-secondary transition-colors">
-                  <span className="material-symbols-outlined text-xl">{isMuted ? 'music_note' : 'music_off'}</span>
-                  <span className="text-[10px] tracking-widest uppercase">{isMuted ? 'Play BGM' : 'Mute BGM'}</span>
+              <div className="flex justify-center gap-8 border-b border-border/20">
+                <button 
+                  onClick={() => setMyTab('posts')} 
+                  className={`pb-3 text-xs tracking-widest ${myTab === 'posts' ? 'text-text-primary border-b-2 border-[#4a4030]' : 'text-text-tertiary'}`}
+                >
+                  自分の灯火
+                </button>
+                <button 
+                  onClick={() => setMyTab('favorites')} 
+                  className={`pb-3 text-xs tracking-widest ${myTab === 'favorites' ? 'text-text-primary border-b-2 border-[#4a4030]' : 'text-text-tertiary'}`}
+                >
+                  心に留めた灯火
                 </button>
               </div>
-            ) : (
-              <form onSubmit={handleSubmit} className="space-y-8 bg-bg-secondary p-8 sm:p-10 card shadow-subtle relative w-full border border-border">
-                <div className="flex flex-col items-center gap-4">
-                  <p className="text-[10px] tracking-[0.2em] text-text-tertiary font-mincho uppercase">Writing with BGM</p>
-                  <button type="button" onClick={toggleMute} className="flex items-center justify-center w-12 h-12 rounded-full bg-white/50 border border-border/50 shadow-sm">
-                    <span className="material-symbols-outlined text-text-secondary text-2xl">{isMuted ? 'music_note' : 'music_off'}</span>
+            </div>
+          ) : (
+            !showForm && !hasInteracted && (
+              <div className="w-full max-w-4xl mb-16">
+                <div className="flex flex-col items-center md:hidden gap-6">
+                  <div className="w-[140px] pointer-events-none">
+                    <img src={JIZO_DESKTOP} alt="地蔵" className="w-full h-auto object-contain" />
+                  </div>
+                  <div className="w-full bg-white/30 border border-border/30 rounded-xl scrolling-container" style={{ height: '200px' }}>
+                    <div className="scrolling-content px-8 py-6 space-y-12 text-[15px] leading-relaxed tracking-wider text-left text-text-secondary">
+                      <div className="space-y-8">
+                        <p>今日という一日を、そっと振り返ってみる。</p>
+                        <p>特別なことがなくても、いつもの場所にいつものものがちゃんとあって、誰かのささやかな親切や、自分だけが知っている小さな頑張りが、気づけば心を支えてくれていたりする。</p>
+                        <p>そのぬくもりを手のひらで包むような気持ちで、ありがとうの気持ちを静かに押し出してみる。</p>
+                        <p>言葉は、あとからゆっくりついてくる。<br />まずはここに、今日のありがとうを、小さく灯してみませんか。</p>
+                      </div>
+                      <div className="space-y-8">
+                        <p>今日という一日を、そっと振り返ってみる。</p>
+                        <p>特別なことがなくても、いつもの場所にいつものものがちゃんとあって、誰かのささやかな親切や、自分だけが知っている小さな頑張りが、気づけば心を支えてくれていたりする。</p>
+                        <p>そのぬくもりを手のひらで包むような気持ちで、ありがとうの気持ちを静かに押し出してみる。</p>
+                        <p>言葉は、あとからゆっくりついてくる。<br />まずはここに、今日のありがとうを、小さく灯してみませんか。</p>
+                      </div>
+                    </div>
+                    <div className="absolute inset-x-0 top-0 h-12 bg-gradient-to-b from-bg-primary to-transparent pointer-events-none z-10"></div>
+                    <div className="absolute inset-x-0 bottom-0 h-12 bg-gradient-to-t from-bg-primary to-transparent pointer-events-none z-10"></div>
+                  </div>
+                </div>
+                <div className="hidden md:flex flex-row items-center gap-16 bg-white/20 p-12 rounded-2xl border border-border/30">
+                  <div className="flex justify-start items-center w-2/5 pointer-events-none">
+                    <img src={JIZO_DESKTOP} alt="" style={{ width: '380px', height: 'auto' }} className="object-contain" />
+                  </div>
+                  <div className="flex-1 text-left space-y-8 leading-relaxed opacity-95 text-base tracking-wider">
+                    <p>今日という一日を、そっと振り返ってみる。</p>
+                    <p>特別なことがなくても、いつもの場所にいつものものがちゃんとあって、誰かのささやかな親切や、自分だけが知っている小さな頑張りが、気づけば心を支えてくれていたりする。</p>
+                    <p>そのぬくもりを手のひらで包むような気持ちで、ありがとうの気持ちを静かに押し出してみる。</p>
+                    <p>言葉は、あとからゆっくりついてくる。<br />まずはここに、今日のありがとうを、小さく灯してみませんか。</p>
+                  </div>
+                </div>
+              </div>
+            )
+          )}
+
+          {viewMode === 'all' && (
+            <div className="w-full max-w-lg mb-12" ref={formRef}>
+              {!showForm ? (
+                <div className="space-y-6 flex flex-col items-center">
+                  <button onClick={() => { setShowForm(true); if (audioRef.current && !isMuted) audioRef.current.play().catch(() => {}); }} className="bg-[#4a4030] hover:bg-[#3d3428] text-white w-full font-medium shadow-lg text-lg py-5 rounded-lg transition-colors tracking-widest">ありがとうを灯す</button>
+                  <button type="button" onClick={() => { setIsMuted(!isMuted); if (audioRef.current) !isMuted ? audioRef.current.pause() : audioRef.current.play().catch(() => {}); }} className="flex items-center gap-2 text-text-tertiary hover:text-text-secondary transition-colors">
+                    <span className="material-symbols-outlined text-xl">{isMuted ? 'music_note' : 'music_off'}</span>
+                    <span className="text-[10px] tracking-widest uppercase">{isMuted ? 'Play BGM' : 'Mute BGM'}</span>
                   </button>
                 </div>
-                <div>
-                  <label className="block text-xs mb-3 font-mincho tracking-wide text-text-secondary">お名前(ニックネーム)</label>
-                  <input type="text" value={name} onChange={(e) => setName(e.target.value)} className="input-base text-base bg-white py-3 outline-none" required />
-                </div>
-                <div>
-                  <label className="block text-xs mb-3 font-mincho tracking-wide text-text-secondary">本文</label>
-                  <textarea value={content} onChange={(e) => setContent(e.target.value)} rows={6} className="input-base resize-none text-base bg-white py-3 outline-none" required />
-                </div>
-                <div className="flex flex-col gap-4 pt-4">
-                  <button type="submit" disabled={submitting} className="bg-[#4a4030] hover:bg-[#3d3428] text-white w-full font-medium text-base py-4 rounded-lg shadow-md">{submitting ? '地蔵に届けています...' : '地蔵に届ける'}</button>
-                  <button type="button" onClick={() => { setShowForm(false); }} className="btn-secondary w-full text-base py-4">やめる</button>
-                </div>
-              </form>
-            )}
-          </div>
+              ) : (
+                <form onSubmit={handleSubmit} className="space-y-8 bg-bg-secondary p-8 sm:p-10 card shadow-subtle relative w-full border border-border">
+                  <div>
+                    <label className="block text-xs mb-3 font-mincho tracking-wide text-text-secondary">お名前(ニックネーム)</label>
+                    <input type="text" value={name} onChange={(e) => setName(e.target.value)} className="input-base text-base bg-white py-3 outline-none" required />
+                  </div>
+                  <div>
+                    <label className="block text-xs mb-3 font-mincho tracking-wide text-text-secondary">本文</label>
+                    <textarea value={content} onChange={(e) => setContent(e.target.value)} rows={6} className="input-base resize-none text-base bg-white py-3 outline-none" required />
+                  </div>
+                  <div className="flex flex-col gap-4 pt-4">
+                    <button type="submit" disabled={submitting} className="bg-[#4a4030] hover:bg-[#3d3428] text-white w-full font-medium text-base py-4 rounded-lg shadow-md">{submitting ? '地蔵に届けています...' : '地蔵に届ける'}</button>
+                    <button type="button" onClick={() => setShowForm(false)} className="btn-secondary w-full text-base py-4">やめる</button>
+                  </div>
+                </form>
+              )}
+            </div>
+          )}
         </div>
 
         <div className="space-y-12 max-w-4xl mx-auto">
-          {posts.map((post) => (
-            <article key={post.id} className="border border-border rounded-lg overflow-hidden bg-white shadow-subtle">
-              <div className="p-6 sm:p-12 pb-8 flex flex-col sm:flex-row items-start gap-6 sm:gap-10">
-                <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full flex-shrink-0 overflow-hidden bg-[#fafaf5] border border-border/40 shadow-inner flex items-center justify-center">
-                  <img src={CANDLE_GIF} alt="灯" className="w-[140%] h-[140%] object-cover mix-blend-multiply opacity-90" />
+          {displayedPosts.length === 0 && viewMode === 'mypage' ? (
+            <div className="text-center py-20 text-text-tertiary font-mincho tracking-widest animate-pulse">まだ記録がありません</div>
+          ) : (
+            displayedPosts.map((post) => (
+              <article key={post.id} className="group relative border border-border rounded-lg overflow-hidden bg-white shadow-subtle">
+                <div className="absolute top-4 right-4 flex gap-4 opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity z-20">
+                  {myPostIds.includes(post.id) && (
+                    <button className="text-text-tertiary hover:text-[#4a4030]">
+                      <span className="material-symbols-outlined text-lg">edit</span>
+                    </button>
+                  )}
+                  <button onClick={() => toggleFavorite(post.id)} className={`${favoriteIds.includes(post.id) ? 'text-red-400' : 'text-text-tertiary hover:text-red-300'} transition-colors`}>
+                    <span className={`material-symbols-outlined text-lg ${favoriteIds.includes(post.id) ? 'fill-1' : ''}`}>favorite</span>
+                  </button>
                 </div>
-                <div className="flex-1 w-full">
-                  <div className="flex items-baseline gap-4 text-[10px] sm:text-xs mb-5">
-                    <time className="text-text-secondary">{new Date(post.created_at).toLocaleDateString('ja-JP', { year: 'numeric', month: 'long', day: 'numeric' })}</time>
-                    <span className="font-mincho tracking-wide text-text-secondary">{post.name}</span>
-                  </div>
-                  <p className="whitespace-pre-wrap leading-loose text-sm sm:text-base opacity-90">{post.content}</p>
-                </div>
-              </div>
 
-              {post.ai_reply && (
-                <div className="px-4 pb-4 sm:px-10 sm:pb-10 pt-0">
-                  <div className="bg-[#fafaf5] rounded-lg p-5 sm:p-8 flex flex-col sm:flex-row items-start gap-4 sm:gap-6 border border-[#f0eee5]">
-                    <div style={{ width: '80px', height: '80px' }} className="rounded-full flex-shrink-0 overflow-hidden border border-border/30 shadow-sm bg-white">
-                      <img src={JIZO_DESKTOP} alt="地蔵" className="w-full h-full object-cover" />
+                <div className="p-6 sm:p-12 pb-8 flex flex-col sm:flex-row items-start gap-6 sm:gap-10">
+                  <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full flex-shrink-0 overflow-hidden bg-[#fafaf5] border border-border/40 shadow-inner flex items-center justify-center">
+                    <img src={CANDLE_GIF} alt="灯" className="w-[140%] h-[140%] object-cover mix-blend-multiply opacity-90" />
+                  </div>
+                  <div className="flex-1 w-full">
+                    <div className="flex items-baseline gap-4 text-[10px] sm:text-xs mb-5">
+                      <time className="text-text-secondary">{new Date(post.created_at).toLocaleDateString('ja-JP', { year: 'numeric', month: 'long', day: 'numeric' })}</time>
+                      <span className="font-mincho tracking-wide text-text-secondary">{post.name}</span>
                     </div>
-                    <div className="flex-1">
-                      <div className="text-[9px] text-text-tertiary mb-2 font-mincho tracking-widest uppercase">ありがと地蔵</div>
-                      <p className="leading-loose text-sm sm:text-base">{post.ai_reply}</p>
-                    </div>
+                    <p className="whitespace-pre-wrap leading-loose text-sm sm:text-base opacity-90">{post.content}</p>
                   </div>
                 </div>
-              )}
-            </article>
-          ))}
+
+                {post.ai_reply && (
+                  <div className="px-4 pb-4 sm:px-10 sm:pb-10 pt-0">
+                    <div className="bg-[#fafaf5] rounded-lg p-5 sm:p-8 flex flex-col sm:flex-row items-start gap-4 sm:gap-6 border border-[#f0eee5]">
+                      <div style={{ width: '80px', height: '80px' }} className="rounded-full flex-shrink-0 overflow-hidden border border-border/30 shadow-sm bg-white">
+                        <img src={JIZO_DESKTOP} alt="地蔵" className="w-full h-full object-cover" />
+                      </div>
+                      <div className="flex-1">
+                        <div className="text-[9px] text-text-tertiary mb-2 font-mincho tracking-widest uppercase">ありがと地蔵</div>
+                        <p className="leading-loose text-sm sm:text-base">{post.ai_reply}</p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </article>
+            ))
+          )}
         </div>
       </div>
     </div>
