@@ -48,7 +48,18 @@ function App() {
         audioRef.current.pause();
       }
     };
+
+    const handleBeforeUnload = () => {
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current.src = "";
+        audioRef.current.load();
+      }
+    };
+
     document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    window.addEventListener('pagehide', handleBeforeUnload);
 
     const channel = supabase
       .channel('realtime-posts')
@@ -60,6 +71,8 @@ function App() {
     return () => {
       supabase.removeChannel(channel);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      window.removeEventListener('pagehide', handleBeforeUnload);
       if (audioRef.current) {
         audioRef.current.pause();
         audioRef.current = null;
@@ -137,12 +150,14 @@ function App() {
 
           {!showForm && !hasInteracted && (
             <div className="w-full max-w-4xl mb-16">
-              <div className="relative flex flex-col md:flex-row items-center gap-8 md:gap-16 bg-white/20 p-8 md:p-12 rounded-2xl overflow-hidden min-h-[350px] md:min-h-0 border border-border/30">
-                <div className="absolute inset-0 flex justify-center items-center md:hidden opacity-40 pointer-events-none">
-                  <img src={JIZO_IPHONE} alt="" style={{ width: '100%', maxWidth: '300px' }} className="h-auto object-contain px-4" />
+              <div className="relative flex flex-col md:flex-row items-center gap-8 md:gap-16 bg-white/20 p-8 md:p-12 rounded-2xl overflow-hidden min-h-[480px] md:min-h-0 border border-border/30">
+                {/* スマホ用背景地蔵：ご希望に合わせて 290px に設定 */}
+                <div className="absolute inset-0 flex justify-center items-end md:hidden opacity-35 pointer-events-none pb-0">
+                  <img src={JIZO_IPHONE} alt="" style={{ width: '290px', height: 'auto' }} className="object-contain" />
                 </div>
+                {/* デスクトップ用地蔵 */}
                 <div className="hidden md:flex justify-start items-center md:w-2/5 pointer-events-none">
-                  <img src={JIZO_DESKTOP} alt="" className="w-full h-auto object-contain" />
+                  <img src={JIZO_DESKTOP} alt="" style={{ width: '100%', maxWidth: '380px' }} className="h-auto object-contain" />
                 </div>
                 <div className="relative z-10 flex-1 text-left space-y-8 leading-relaxed opacity-95 text-[15px] sm:text-base tracking-wider">
                   <p>今日という一日を、そっと振り返ってみる。</p>
@@ -219,7 +234,7 @@ function App() {
               {post.ai_reply && (
                 <div className="px-4 pb-4 sm:px-10 sm:pb-10 pt-0">
                   <div className="bg-[#fafaf5] rounded-lg p-5 sm:p-8 flex flex-col sm:flex-row items-start gap-4 sm:gap-6 border border-[#f0eee5]">
-                    <div style={{ width: '60px', height: '60px' }} className="rounded-full flex-shrink-0 overflow-hidden border border-border/30">
+                    <div style={{ width: '80px', height: '80px' }} className="rounded-full flex-shrink-0 overflow-hidden border border-border/30 shadow-sm bg-white">
                       <img src={JIZO_DESKTOP} alt="地蔵" className="w-full h-full object-cover" />
                     </div>
                     <div className="flex-1">
