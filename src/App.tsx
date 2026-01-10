@@ -46,21 +46,35 @@ function App() {
     const audio = new Audio(BGM_URL);
     audio.loop = true;
     audio.volume = 0.2;
-    audio.setAttribute('playsinline', 'true');
     audioRef.current = audio;
 
-    const channel = supabase
-      .channel('realtime-posts')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'gratitude_posts' }, () => {
-        fetchPosts(); 
-      })
-      .subscribe();
+    // ブラウザのタブ切り替えなどで音楽を止める処理
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        audio.pause();
+      } else if (!isMuted && hasInteracted) {
+        audio.play().catch(() => {});
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
 
     return () => {
-      supabase.removeChannel(channel);
-      if (audioRef.current) audioRef.current.pause();
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      audio.pause();
     };
-  }, []);
+  }, [isMuted, hasInteracted]);
+
+  const toggleMute = () => {
+    setIsMuted(!isMuted);
+    if (audioRef.current) {
+      if (!isMuted) {
+        audioRef.current.pause();
+      } else {
+        audioRef.current.play().catch(() => {});
+      }
+    }
+  };
 
   const toggleFavorite = (id: string) => {
     const newFavorites = favoriteIds.includes(id) ? favoriteIds.filter(f => f !== id) : [...favoriteIds, id];
@@ -108,17 +122,16 @@ function App() {
 
         if (selectedOffering !== 'none') {
           if (selectedOffering === 'omusubi') {
-            setOmusubiCount(prev => prev - 1);
-            localStorage.setItem('jizo_omusubi', String(omusubiCount - 1));
+            const val = omusubiCount - 1;
+            setOmusubiCount(val);
+            localStorage.setItem('jizo_omusubi', String(val));
           } else {
-            setDangoCount(prev => prev - 1);
-            localStorage.setItem('jizo_dango', String(dangoCount - 1));
+            const val = dangoCount - 1;
+            setDangoCount(val);
+            localStorage.setItem('jizo_dango', String(val));
           }
           setOfferingEffect(selectedOffering);
           setOfferingMessage(customReply);
-        } else {
-          setOfferingEffect('none');
-          setOfferingMessage('');
         }
       }
 
@@ -127,11 +140,11 @@ function App() {
       setSelectedOffering('none');
       setShowForm(false);
       setHasInteracted(true); 
+      if (audioRef.current && !isMuted) audioRef.current.play().catch(() => {});
       await fetchPosts();
     } catch (error) { console.error("Submit error:", error); } finally { setSubmitting(false); }
   };
 
-  // --- 修正: 表示する投稿をフィルタリングするロジックを再追加 ---
   const displayedPosts = posts.filter((post: GratitudePost) => {
     if (viewMode === 'all') return true;
     if (myTab === 'posts') return myPostIds.includes(post.id);
@@ -146,6 +159,13 @@ function App() {
       <button onClick={() => { setViewMode('all'); setHasInteracted(false); }} className={`text-xs tracking-[0.2em] transition-colors pb-1 ${viewMode === 'all' ? 'text-text-primary border-b border-text-primary' : 'text-text-tertiary hover:text-text-secondary'}`}>みんなの灯火</button>
       <button onClick={() => { setViewMode('mypage'); setHasInteracted(false); }} className={`text-xs tracking-[0.2em] transition-colors pb-1 ${viewMode === 'mypage' ? 'text-text-primary border-b border-text-primary' : 'text-text-tertiary hover:text-text-secondary'}`}>心覚えの部屋</button>
     </div>
+  );
+
+  const MuteButton = () => (
+    <button type="button" onClick={toggleMute} className="flex items-center gap-2 text-text-tertiary hover:text-text-secondary transition-colors mt-4">
+      <span className="material-symbols-outlined text-xl">{isMuted ? 'music_off' : 'music_note'}</span>
+      <span className="text-[10px] tracking-widest uppercase">{isMuted ? 'Muted' : 'Playing'}</span>
+    </button>
   );
 
   return (
@@ -169,8 +189,8 @@ function App() {
           <nav className="hidden md:block mb-12"><NavLinks /></nav>
 
           {viewMode === 'mypage' ? (
-            <div className="w-full max-w-lg mb-12 text-center fade-in">
-              <div className="bg-white/40 p-8 rounded-2xl border border-border/30 mb-8 flex flex-col items-center">
+            <div className="w-full max-w-lg mb-12 text-center fade-in flex flex-col items-center">
+              <div className="bg-white/40 p-8 rounded-2xl border border-border/30 mb-4 flex flex-col items-center w-full">
                 <div className="text-[10px] tracking-[0.2em] text-text-tertiary uppercase mb-2">積んだ功徳</div>
                 <div className="text-4xl font-mincho text-[#4a4030] mb-6">{virtue}</div>
                 <div className="flex gap-6 border-t border-border/20 pt-6 w-full justify-center">
@@ -184,7 +204,8 @@ function App() {
                   </div>
                 </div>
               </div>
-              <div className="flex justify-center gap-8 border-b border-border/20">
+              <MuteButton />
+              <div className="flex justify-center gap-8 border-b border-border/20 w-full mt-8">
                 <button onClick={() => setMyTab('posts')} className={`pb-3 text-xs tracking-widest ${myTab === 'posts' ? 'text-text-primary border-b-2 border-[#4a4030]' : 'text-text-tertiary'}`}>自分の灯火</button>
                 <button onClick={() => setMyTab('favorites')} className={`pb-3 text-xs tracking-widest ${myTab === 'favorites' ? 'text-text-primary border-b-2 border-[#4a4030]' : 'text-text-tertiary'}`}>心に留めた灯火</button>
               </div>
@@ -208,12 +229,7 @@ function App() {
                       {offeringMessage}
                     </div>
                   )}
-                  <button 
-                    onClick={() => setHasInteracted(false)} 
-                    className="mt-12 text-[10px] tracking-widest text-text-tertiary border-b border-text-tertiary pb-1 hover:text-text-secondary transition-colors"
-                  >
-                    戻る
-                  </button>
+                  <button onClick={() => setHasInteracted(false)} className="mt-12 text-[10px] tracking-widest text-text-tertiary border-b border-text-tertiary pb-1 hover:text-text-secondary transition-colors">戻る</button>
                 </div>
               ) : !showForm && (
                 <>
@@ -247,15 +263,12 @@ function App() {
           )}
 
           {viewMode === 'all' && !hasInteracted && (
-            <div className="w-full max-w-lg mb-12" ref={formRef}>
+            <div className="w-full max-w-lg mb-12 flex flex-col items-center" ref={formRef}>
               {!showForm ? (
-                <div className="space-y-6 flex flex-col items-center">
+                <>
                   <button onClick={() => { setShowForm(true); setOfferingEffect('none'); setOfferingMessage(''); if (audioRef.current && !isMuted) audioRef.current.play().catch(() => {}); }} className="bg-[#4a4030] hover:bg-[#3d3428] text-white w-full font-medium shadow-lg text-lg py-5 rounded-lg transition-colors tracking-widest">ありがとうを灯す</button>
-                  <button type="button" onClick={() => { setIsMuted(!isMuted); if (audioRef.current) !isMuted ? audioRef.current.pause() : audioRef.current.play().catch(() => {}); }} className="flex items-center gap-2 text-text-tertiary hover:text-text-secondary transition-colors">
-                    <span className="material-symbols-outlined text-xl">{isMuted ? 'music_note' : 'music_off'}</span>
-                    <span className="text-[10px] tracking-widest uppercase">{isMuted ? 'Play BGM' : 'Mute BGM'}</span>
-                  </button>
-                </div>
+                  <MuteButton />
+                </>
               ) : (
                 <form onSubmit={handleSubmit} className="space-y-8 bg-bg-secondary p-8 sm:p-10 card shadow-subtle relative w-full border border-border">
                   <div>
@@ -269,7 +282,7 @@ function App() {
                   
                   {(omusubiCount > 0 || dangoCount > 0) && (
                     <div className="pt-2 border-t border-border/10">
-                      <p className="text-[10px] tracking-[0.2em] text-text-tertiary mb-4 text-center uppercase">お供え物を添える</p>
+                      <p className="text-[10px] tracking-[0.2em] text-text-tertiary mb-4 text-center uppercase">お供え物を添える（1つだけ）</p>
                       <div className="flex justify-center gap-8">
                         {omusubiCount > 0 && (
                           <button type="button" onClick={() => setSelectedOffering(selectedOffering === 'omusubi' ? 'none' : 'omusubi')} className={`flex flex-col items-center transition-all ${selectedOffering === 'omusubi' ? 'scale-110 opacity-100' : 'opacity-30 hover:opacity-60'}`}>
