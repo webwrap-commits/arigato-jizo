@@ -51,7 +51,8 @@ function App() {
     const handleVisibilityChange = () => {
       if (document.hidden) {
         audio.pause();
-      } else if (!isMuted && (hasInteracted || showForm)) {
+      } else if (!isMuted) {
+        // 戻ってきたときにミュートでなければ再生を試みる
         audio.play().catch(() => {});
       }
     };
@@ -70,7 +71,7 @@ function App() {
       supabase.removeChannel(channel);
       audio.pause();
     };
-  }, [isMuted, hasInteracted, showForm]);
+  }, []);
 
   const toggleMute = () => {
     const newMuteState = !isMuted;
@@ -167,8 +168,8 @@ function App() {
 
   const NavLinks = () => (
     <div className="flex justify-center gap-12">
-      <button onClick={() => { setViewMode('all'); setHasInteracted(false); }} className={`text-xs tracking-[0.2em] transition-colors pb-1 ${viewMode === 'all' ? 'text-text-primary border-b border-text-primary' : 'text-text-tertiary hover:text-text-secondary'}`}>みんなの灯火</button>
-      <button onClick={() => { setViewMode('mypage'); setHasInteracted(false); }} className={`text-xs tracking-[0.2em] transition-colors pb-1 ${viewMode === 'mypage' ? 'text-text-primary border-b border-text-primary' : 'text-text-tertiary hover:text-text-secondary'}`}>心覚えの部屋</button>
+      <button onClick={() => { setViewMode('all'); setHasInteracted(false); if (audioRef.current && !isMuted) audioRef.current.play().catch(() => {}); }} className={`text-xs tracking-[0.2em] transition-colors pb-1 ${viewMode === 'all' ? 'text-text-primary border-b border-text-primary' : 'text-text-tertiary hover:text-text-secondary'}`}>みんなの灯火</button>
+      <button onClick={() => { setViewMode('mypage'); setHasInteracted(false); if (audioRef.current && !isMuted) audioRef.current.play().catch(() => {}); }} className={`text-xs tracking-[0.2em] transition-colors pb-1 ${viewMode === 'mypage' ? 'text-text-primary border-b border-text-primary' : 'text-text-tertiary hover:text-text-secondary'}`}>心覚えの部屋</button>
     </div>
   );
 
