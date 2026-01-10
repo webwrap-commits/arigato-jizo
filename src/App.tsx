@@ -213,7 +213,7 @@ function App() {
         .scrolling-content { display: flex; flex-direction: column; animation: scrollText 45s linear infinite; }
         .fade-in { animation: fadeIn 1.2s ease forwards; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        .fill-1 { font-variation-settings: 'FILL' 1; }
+        .fill-1 { font-variation-settings: 'FILL' '1'; }
       `}</style>
 
       <nav className="md:hidden py-5 border-b border-border/10 sticky top-0 bg-bg-primary/90 backdrop-blur-md z-50"><NavLinks /></nav>
@@ -248,7 +248,7 @@ function App() {
           ) : (
             <div className="w-full max-w-4xl mb-16 relative flex flex-col items-center">
               {hasInteracted ? (
-                <div className="flex flex-col items-center fade-in py-10 relative">
+                <div className="flex flex-col items-center fade-in py-2 relative">
                   <div className="relative w-[200px] sm:w-[280px]">
                     <img src={JIZO_DESKTOP} alt="地蔵" className="w-full h-auto object-contain" />
                     {offeringEffect !== 'none' && (
@@ -260,11 +260,11 @@ function App() {
                     )}
                   </div>
                   {offeringMessage && (
-                    <div className="mt-8 bg-white/70 backdrop-blur px-8 py-3 rounded-full border border-border/30 text-sm sm:text-base font-mincho tracking-widest fade-in text-[#4a4030]">
+                    <div className="mt-4 bg-white/70 backdrop-blur px-8 py-2 rounded-full border border-border/30 text-sm sm:text-base font-mincho tracking-widest fade-in text-[#4a4030]">
                       {offeringMessage}
                     </div>
                   )}
-                  <button onClick={() => setHasInteracted(false)} className="mt-12 text-[10px] tracking-widest text-text-tertiary border-b border-text-tertiary pb-1 hover:text-text-secondary transition-colors">戻る</button>
+                  <button onClick={() => setHasInteracted(false)} className="mt-6 text-[10px] tracking-widest text-text-tertiary border-b border-text-tertiary pb-0.5 hover:text-text-secondary transition-colors">戻る</button>
                 </div>
               ) : !showForm && (
                 <>
@@ -383,7 +383,6 @@ function App() {
                     ) : (
                       <>
                         <p className="whitespace-pre-wrap leading-loose text-sm sm:text-base opacity-90">{post.content}</p>
-                        {/* 自分の投稿かつ編集中でない場合に編集ボタンを表示 */}
                         {myPostIds.includes(post.id) && (
                           <div className="mt-4 flex justify-end">
                             <button 
