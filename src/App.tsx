@@ -216,11 +216,11 @@ function App() {
         .fill-1 { font-variation-settings: 'FILL' 1; }
       `}</style>
 
-      <nav className="md:hidden py-5 border-b border-border/10 sticky top-0 bg-bg-primary/90 backdrop-blur-md z-50"><NavLinks /></nav>
+      <nav className={`md:hidden ${hasInteracted ? 'py-2' : 'py-5'} border-b border-border/10 sticky top-0 bg-bg-primary/90 backdrop-blur-md z-50`}><NavLinks /></nav>
 
-      <div className={`max-w-site mx-auto px-6 ${hasInteracted ? 'py-4 sm:py-20' : 'py-12 sm:py-20'}`}>
-        <div className="flex flex-col items-center mb-0">
-          <h1 className="text-4xl sm:text-5xl font-mincho font-extralight mb-6 sm:mb-10 tracking-widest cursor-pointer" onClick={() => { setViewMode('all'); setHasInteracted(false); }}>ありがと地蔵</h1>
+      <div className={`max-w-site mx-auto px-6 ${hasInteracted ? 'py-2 sm:py-20' : 'py-8 sm:py-20'}`}>
+        <div className="flex flex-col items-center">
+          <h1 className={`font-mincho font-extralight tracking-widest cursor-pointer ${hasInteracted ? 'text-2xl sm:text-5xl mb-4 sm:mb-10' : 'text-4xl sm:text-5xl mb-10'}`} onClick={() => { setViewMode('all'); setHasInteracted(false); }}>ありがと地蔵</h1>
           <nav className="hidden md:block mb-12"><NavLinks /></nav>
 
           {viewMode === 'mypage' ? (
@@ -246,10 +246,10 @@ function App() {
               </div>
             </div>
           ) : (
-            <div className={`w-full max-w-4xl relative flex flex-col items-center ${hasInteracted ? 'mb-2' : 'mb-16'}`}>
+            <div className={`w-full max-w-4xl relative flex flex-col items-center ${hasInteracted ? 'mb-4' : 'mb-16'}`}>
               {hasInteracted ? (
                 <div className="flex flex-col items-center fade-in py-0 relative w-full">
-                  <div className="relative w-[180px] sm:w-[240px]">
+                  <div className="relative w-[150px] sm:w-[240px]">
                     <img src={JIZO_DESKTOP} alt="地蔵" className="w-full h-auto object-contain" />
                     {offeringEffect !== 'none' && (
                       <img 
@@ -265,6 +265,8 @@ function App() {
                     </div>
                   )}
                   <button onClick={() => setHasInteracted(false)} className="mt-4 text-[10px] tracking-widest text-text-tertiary border-b border-text-tertiary pb-0 hover:text-text-secondary transition-colors">戻る</button>
+                  {/* ここにMuteButtonを追加しました */}
+                  <MuteButton />
                 </div>
               ) : !showForm && (
                 <>
