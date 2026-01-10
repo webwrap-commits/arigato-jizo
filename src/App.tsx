@@ -21,6 +21,10 @@ function App() {
   const [offeringEffect, setOfferingEffect] = useState<'none' | 'omusubi' | 'dango'>('none');
   const [offeringMessage, setOfferingMessage] = useState('');
 
+  // 編集用の状態
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editContent, setEditContent] = useState('');
+
   const [submitting, setSubmitting] = useState(false);
   const [loading, setLoading] = useState(true);
   const [isMuted, setIsMuted] = useState(false);
@@ -36,7 +40,12 @@ function App() {
 
   const fetchPosts = async () => {
     try {
-      const { data, error } = await supabase.from('gratitude_posts').select('*').order('created_at', { ascending: false });
+      const { data, error } = await supabase
+        .from('gratitude_posts')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(50);
+      
       if (!error) setPosts(data || []);
     } catch (err) { console.error("Fetch error:", err); } finally { setLoading(false); }
   };
@@ -97,8 +106,8 @@ function App() {
 
     try {
       let customReply = "";
-      if (selectedOffering === 'omusubi') customReply = "おむすび、ありがたく。心がお腹いっぱいになります。";
-      else if (selectedOffering === 'dango') customReply = "見事な彩り、心が晴れやかになります。";
+      if (selectedOffering === 'omusubi') customReply = "おむすび、ありがたく。";
+      else if (selectedOffering === 'dango') customReply = "見事な彩り、ありがたく。";
 
       const { data, error } = await supabase
         .from('gratitude_posts')
@@ -154,6 +163,23 @@ function App() {
       if (audioRef.current && !isMuted) audioRef.current.play().catch(() => {});
       await fetchPosts();
     } catch (error) { console.error("Submit error:", error); } finally { setSubmitting(false); }
+  };
+
+  // 編集保存の処理
+  const handleUpdate = async (id: string) => {
+    if (!editContent.trim()) return;
+    try {
+      const { error } = await supabase
+        .from('gratitude_posts')
+        .update({ content: editContent.trim() })
+        .eq('id', id);
+      
+      if (error) throw error;
+      setEditingId(null);
+      fetchPosts();
+    } catch (error) {
+      console.error("Update error:", error);
+    }
   };
 
   const displayedPosts = posts.filter((post: GratitudePost) => {
@@ -330,6 +356,15 @@ function App() {
             displayedPosts.map((post: GratitudePost) => (
               <article key={post.id} className="group relative border border-border rounded-lg overflow-hidden bg-white shadow-subtle">
                 <div className="absolute top-4 right-4 flex gap-4 opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity z-20">
+                  {/* 自分の投稿なら編集ボタンを表示 */}
+                  {myPostIds.includes(post.id) && (
+                    <button 
+                      onClick={() => { setEditingId(post.id); setEditContent(post.content); }}
+                      className="text-text-tertiary hover:text-[#4a4030] transition-colors"
+                    >
+                      <span className="material-symbols-outlined text-lg">edit_note</span>
+                    </button>
+                  )}
                   <button onClick={() => toggleFavorite(post.id)} className={`${favoriteIds.includes(post.id) ? 'text-red-400' : 'text-text-tertiary hover:text-red-300'} transition-colors`}>
                     <span className={`material-symbols-outlined text-lg ${favoriteIds.includes(post.id) ? 'fill-1' : ''}`}>favorite</span>
                   </button>
@@ -343,7 +378,22 @@ function App() {
                       <time className="text-text-secondary">{new Date(post.created_at).toLocaleDateString('ja-JP', { year: 'numeric', month: 'long', day: 'numeric' })}</time>
                       <span className="font-mincho tracking-wide text-text-secondary">{post.name}</span>
                     </div>
-                    <p className="whitespace-pre-wrap leading-loose text-sm sm:text-base opacity-90">{post.content}</p>
+                    {editingId === post.id ? (
+                      <div className="space-y-4">
+                        <textarea 
+                          value={editContent} 
+                          onChange={(e) => setEditContent(e.target.value)}
+                          className="w-full p-4 border border-border rounded-md bg-[#fafaf5] outline-none text-sm sm:text-base leading-loose"
+                          rows={4}
+                        />
+                        <div className="flex gap-4">
+                          <button onClick={() => handleUpdate(post.id)} className="text-xs bg-[#4a4030] text-white px-4 py-2 rounded-md">保存</button>
+                          <button onClick={() => setEditingId(null)} className="text-xs border border-border px-4 py-2 rounded-md">キャンセル</button>
+                        </div>
+                      </div>
+                    ) : (
+                      <p className="whitespace-pre-wrap leading-loose text-sm sm:text-base opacity-90">{post.content}</p>
+                    )}
                   </div>
                 </div>
                 {post.ai_reply && (
