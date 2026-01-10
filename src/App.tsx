@@ -18,8 +18,7 @@ function App() {
   const BGM_URL = "https://res.cloudinary.com/dh6zibjr8/video/upload/v1767851964/arigatojizo_jyb8kh.mp3";
   const CANDLE_GIF = "https://res.cloudinary.com/dh6zibjr8/image/upload/v1767936137/rousoku_anime2_cj4vpe.gif";
   const JIZO_DESKTOP = "https://res.cloudinary.com/dh6zibjr8/image/upload/v1767939481/jizo_desktop_pwkcpp.png";
-  
-  // URLに /w_800/ を追加して、Cloudinary側から確実に大きな画像を出力させます
+  // Cloudinaryのw_800指定を含めたURL
   const JIZO_IPHONE = "https://res.cloudinary.com/dh6zibjr8/image/upload/w_800/v1767939481/jizo_iphone_hqrogw.png";
 
   const fetchPosts = async () => {
@@ -44,24 +43,6 @@ function App() {
     audio.setAttribute('playsinline', 'true');
     audioRef.current = audio;
 
-    const handleVisibilityChange = () => {
-      if (document.hidden && audioRef.current) {
-        audioRef.current.pause();
-      }
-    };
-
-    const handleBeforeUnload = () => {
-      if (audioRef.current) {
-        audioRef.current.pause();
-        audioRef.current.src = "";
-        audioRef.current.load();
-      }
-    };
-
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    window.addEventListener('beforeunload', handleBeforeUnload);
-    window.addEventListener('pagehide', handleBeforeUnload);
-
     const channel = supabase
       .channel('realtime-posts')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'gratitude_posts' }, () => {
@@ -71,9 +52,6 @@ function App() {
 
     return () => {
       supabase.removeChannel(channel);
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-      window.removeEventListener('beforeunload', handleBeforeUnload);
-      window.removeEventListener('pagehide', handleBeforeUnload);
       if (audioRef.current) {
         audioRef.current.pause();
         audioRef.current = null;
@@ -124,7 +102,6 @@ function App() {
       window.scrollTo({ top: 0, behavior: 'smooth' });
     } catch (error) {
       console.error("Submit error:", error);
-      alert('地蔵への送信に失敗しました。');
     } finally {
       setSubmitting(false);
     }
@@ -143,9 +120,17 @@ function App() {
           {!showForm && !hasInteracted && (
             <div className="w-full max-w-4xl mb-16">
               <div className="relative flex flex-col md:flex-row items-center gap-8 md:gap-16 bg-white/20 p-8 md:p-12 rounded-2xl min-h-[450px] md:min-h-0 border border-border/30">
+                {/* スマホ用お地蔵様：絶対に小さくならないよう、親要素にmin-widthを持たせた構造に変更 */}
                 <div className="absolute inset-0 flex justify-center items-center md:hidden opacity-30 pointer-events-none">
-                  <img src={JIZO_IPHONE} alt="" style={{ width: '290px', maxWidth: '80%', height: 'auto' }} className="object-contain" />
+                  <div style={{ minWidth: '290px', width: '290px' }}>
+                    <img 
+                      src={JIZO_IPHONE} 
+                      alt="" 
+                      style={{ width: '100%', height: 'auto', display: 'block' }} 
+                    />
+                  </div>
                 </div>
+
                 <div className="hidden md:flex justify-start items-center md:w-2/5 pointer-events-none">
                   <img src={JIZO_DESKTOP} alt="" style={{ width: '380px', height: 'auto' }} className="object-contain" />
                 </div>
@@ -208,6 +193,22 @@ function App() {
                   <p className="whitespace-pre-wrap leading-loose text-sm sm:text-base opacity-90">{post.content}</p>
                 </div>
               </div>
+
+              {/* 復活：お地蔵様の返信（ai_reply）を表示するパーツ */}
+              {post.ai_reply && (
+                <div className="px-4 pb-4 sm:px-10 sm:pb-10 pt-0">
+                  <div className="bg-[#fafaf5] rounded-lg p-5 sm:p-8 flex flex-col sm:flex-row items-start gap-4 sm:gap-6 border border-[#f0eee5]">
+                    <div style={{ width: '80px', height: '80px' }} className="rounded-full flex-shrink-0 overflow-hidden border border-border/30 shadow-sm bg-white">
+                      <img src={JIZO_DESKTOP} alt="地蔵" className="w-full h-full object-cover" />
+                    </div>
+                    <div className="flex-1">
+                      <div className="text-[9px] text-text-tertiary mb-2 font-mincho tracking-widest uppercase">ありがと地蔵</div>
+                      <p className="leading-loose text-sm sm:text-base">{post.ai_reply}</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
             </article>
           ))}
         </div>
