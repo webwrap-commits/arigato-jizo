@@ -18,8 +18,6 @@ function App() {
   const BGM_URL = "https://res.cloudinary.com/dh6zibjr8/video/upload/v1767851964/arigatojizo_jyb8kh.mp3";
   const CANDLE_GIF = "https://res.cloudinary.com/dh6zibjr8/image/upload/v1767936137/rousoku_anime2_cj4vpe.gif";
   const JIZO_DESKTOP = "https://res.cloudinary.com/dh6zibjr8/image/upload/v1767939481/jizo_desktop_pwkcpp.png";
-  // Cloudinaryのw_800指定を含めたURL
-  const JIZO_IPHONE = "https://res.cloudinary.com/dh6zibjr8/image/upload/w_800/v1767939481/jizo_iphone_hqrogw.png";
 
   const fetchPosts = async () => {
     try {
@@ -113,37 +111,64 @@ function App() {
     <div className="min-h-screen bg-bg-primary font-gothic font-extralight text-text-primary relative" ref={topRef}>
       <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
 
+      {/* エンドロールアニメーションの定義 */}
+      <style>{`
+        @keyframes scrollText {
+          0% { transform: translateY(100%); }
+          100% { transform: translateY(-100%); }
+        }
+        .scrolling-content {
+          animation: scrollText 25s linear infinite;
+        }
+      `}</style>
+
       <div className="max-w-site mx-auto px-6 py-12 sm:py-20">
         <div className="flex flex-col items-center mb-10 sm:mb-16">
           <h1 className="text-4xl sm:text-5xl font-mincho font-extralight mb-10 tracking-widest cursor-pointer" onClick={() => window.location.reload()}>ありがと地蔵</h1>
 
           {!showForm && !hasInteracted && (
             <div className="w-full max-w-4xl mb-16">
-              <div className="relative flex flex-col md:flex-row items-center gap-8 md:gap-16 bg-white/20 p-8 md:p-12 rounded-2xl min-h-[450px] md:min-h-0 border border-border/30">
-                {/* スマホ用お地蔵様：絶対に小さくならないよう、親要素にmin-widthを持たせた構造に変更 */}
-                <div className="absolute inset-0 flex justify-center items-center md:hidden opacity-30 pointer-events-none">
-                  <div style={{ minWidth: '290px', width: '290px' }}>
-                    <img 
-                      src={JIZO_IPHONE} 
-                      alt="" 
-                      style={{ width: '100%', height: 'auto', display: 'block' }} 
-                    />
-                  </div>
+              
+              {/* --- スマホ専用レイアウト (md未満で表示) --- */}
+              <div className="flex flex-col items-center md:hidden gap-6">
+                {/* 1. お地蔵様 (一回り小さく、ハッキリした色) */}
+                <div className="w-[140px] pointer-events-none">
+                  <img src={JIZO_DESKTOP} alt="地蔵" className="w-full h-auto object-contain" />
                 </div>
 
-                <div className="hidden md:flex justify-start items-center md:w-2/5 pointer-events-none">
+                {/* 2. メッセージボード (高さを制限し、エンドロールさせる) */}
+                <div className="w-full bg-white/30 border border-border/30 rounded-xl overflow-hidden relative" style={{ height: '180px' }}>
+                  <div className="absolute inset-0 scrolling-content px-8 py-4 space-y-8 text-[15px] leading-relaxed tracking-wider text-left">
+                    <p>今日という一日を、そっと振り返ってみる。</p>
+                    <p>特別なことがなくても、いつもの場所にいつものものがちゃんとあって、誰かのささやかな親切や、自分だけが知っている小さな頑張りが、気づけば心を支えてくれていたりする。</p>
+                    <p>そのぬくもりを手のひらで包むような気持ちで、ありがとうの気持ちを静かに押し出してみる。</p>
+                    <p>言葉は、あとからゆっくりついてくる。<br />まずはここに、今日のありがとうを、小さく灯してみませんか。</p>
+                    {/* ループを滑らかにするための余白 */}
+                    <div className="h-[100px]"></div>
+                  </div>
+                  {/* 上下にうっすらグラデーション（文字が消えていく演出） */}
+                  <div className="absolute inset-x-0 top-0 h-8 bg-gradient-to-b from-bg-primary/50 to-transparent pointer-events-none"></div>
+                  <div className="absolute inset-x-0 bottom-0 h-8 bg-gradient-to-t from-bg-primary/50 to-transparent pointer-events-none"></div>
+                </div>
+              </div>
+
+              {/* --- デスクトップ用レイアウト (md以上で表示) --- */}
+              <div className="hidden md:flex flex-row items-center gap-16 bg-white/20 p-12 rounded-2xl border border-border/30">
+                <div className="flex justify-start items-center w-2/5 pointer-events-none">
                   <img src={JIZO_DESKTOP} alt="" style={{ width: '380px', height: 'auto' }} className="object-contain" />
                 </div>
-                <div className="relative z-10 flex-1 text-left space-y-8 leading-relaxed opacity-95 text-[15px] sm:text-base tracking-wider">
+                <div className="flex-1 text-left space-y-8 leading-relaxed opacity-95 text-base tracking-wider">
                   <p>今日という一日を、そっと振り返ってみる。</p>
                   <p>特別なことがなくても、いつもの場所にいつものものがちゃんとあって、誰かのささやかな親切や、自分だけが知っている小さな頑張りが、気づけば心を支えてくれていたりする。</p>
                   <p>そのぬくもりを手のひらで包むような気持ちで、ありがとうの気持ちを静かに押し出してみる。</p>
                   <p>言葉は、あとからゆっくりついてくる。<br />まずはここに、今日のありがとうを、小さく灯してみませんか。</p>
                 </div>
               </div>
+
             </div>
           )}
 
+          {/* フォームやボタンなどの共通パーツ */}
           <div className="w-full max-w-lg mb-12" ref={formRef}>
             {!showForm ? (
               <div className="space-y-6 flex flex-col items-center">
@@ -178,6 +203,7 @@ function App() {
           </div>
         </div>
 
+        {/* 投稿一覧 (ai_reply 復活済み) */}
         <div className="space-y-12 max-w-4xl mx-auto">
           {posts.map((post) => (
             <article key={post.id} className="border border-border rounded-lg overflow-hidden bg-white shadow-subtle">
@@ -194,7 +220,6 @@ function App() {
                 </div>
               </div>
 
-              {/* 復活：お地蔵様の返信（ai_reply）を表示するパーツ */}
               {post.ai_reply && (
                 <div className="px-4 pb-4 sm:px-10 sm:pb-10 pt-0">
                   <div className="bg-[#fafaf5] rounded-lg p-5 sm:p-8 flex flex-col sm:flex-row items-start gap-4 sm:gap-6 border border-[#f0eee5]">
@@ -208,7 +233,6 @@ function App() {
                   </div>
                 </div>
               )}
-
             </article>
           ))}
         </div>
