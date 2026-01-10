@@ -218,9 +218,9 @@ function App() {
 
       <nav className="md:hidden py-5 border-b border-border/10 sticky top-0 bg-bg-primary/90 backdrop-blur-md z-50"><NavLinks /></nav>
 
-      <div className="max-w-site mx-auto px-6 py-12 sm:py-20">
+      <div className={`max-w-site mx-auto px-6 ${hasInteracted ? 'py-4 sm:py-20' : 'py-12 sm:py-20'}`}>
         <div className="flex flex-col items-center mb-0">
-          <h1 className="text-4xl sm:text-5xl font-mincho font-extralight mb-10 tracking-widest cursor-pointer" onClick={() => { setViewMode('all'); setHasInteracted(false); }}>ありがと地蔵</h1>
+          <h1 className="text-4xl sm:text-5xl font-mincho font-extralight mb-6 sm:mb-10 tracking-widest cursor-pointer" onClick={() => { setViewMode('all'); setHasInteracted(false); }}>ありがと地蔵</h1>
           <nav className="hidden md:block mb-12"><NavLinks /></nav>
 
           {viewMode === 'mypage' ? (
@@ -246,7 +246,7 @@ function App() {
               </div>
             </div>
           ) : (
-            <div className={`w-full max-w-4xl relative flex flex-col items-center ${hasInteracted ? 'mb-4' : 'mb-16'}`}>
+            <div className={`w-full max-w-4xl relative flex flex-col items-center ${hasInteracted ? 'mb-2' : 'mb-16'}`}>
               {hasInteracted ? (
                 <div className="flex flex-col items-center fade-in py-0 relative w-full">
                   <div className="relative w-[180px] sm:w-[240px]">
