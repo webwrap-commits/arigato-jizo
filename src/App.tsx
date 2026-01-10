@@ -213,13 +213,13 @@ function App() {
         .scrolling-content { display: flex; flex-direction: column; animation: scrollText 45s linear infinite; }
         .fade-in { animation: fadeIn 1.2s ease forwards; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        .fill-1 { font-variation-settings: 'FILL' '1'; }
+        .fill-1 { font-variation-settings: 'FILL' 1; }
       `}</style>
 
       <nav className="md:hidden py-5 border-b border-border/10 sticky top-0 bg-bg-primary/90 backdrop-blur-md z-50"><NavLinks /></nav>
 
       <div className="max-w-site mx-auto px-6 py-12 sm:py-20">
-        <div className="flex flex-col items-center mb-10 sm:mb-16">
+        <div className="flex flex-col items-center mb-0">
           <h1 className="text-4xl sm:text-5xl font-mincho font-extralight mb-10 tracking-widest cursor-pointer" onClick={() => { setViewMode('all'); setHasInteracted(false); }}>ありがと地蔵</h1>
           <nav className="hidden md:block mb-12"><NavLinks /></nav>
 
@@ -246,25 +246,25 @@ function App() {
               </div>
             </div>
           ) : (
-            <div className="w-full max-w-4xl mb-16 relative flex flex-col items-center">
+            <div className={`w-full max-w-4xl relative flex flex-col items-center ${hasInteracted ? 'mb-4' : 'mb-16'}`}>
               {hasInteracted ? (
-                <div className="flex flex-col items-center fade-in py-2 relative">
-                  <div className="relative w-[200px] sm:w-[280px]">
+                <div className="flex flex-col items-center fade-in py-0 relative w-full">
+                  <div className="relative w-[180px] sm:w-[240px]">
                     <img src={JIZO_DESKTOP} alt="地蔵" className="w-full h-auto object-contain" />
                     {offeringEffect !== 'none' && (
                       <img 
                         src={offeringEffect === 'omusubi' ? IMG_OMUSUBI : IMG_DANGO} 
-                        className="absolute bottom-0 left-1/2 -translate-x-1/2 w-20 h-20 sm:w-28 sm:h-28 object-contain drop-shadow-lg fade-in" 
+                        className="absolute bottom-0 left-1/2 -translate-x-1/2 w-16 h-16 sm:w-24 sm:h-24 object-contain drop-shadow-lg fade-in" 
                         alt="お供え"
                       />
                     )}
                   </div>
                   {offeringMessage && (
-                    <div className="mt-4 bg-white/70 backdrop-blur px-8 py-2 rounded-full border border-border/30 text-sm sm:text-base font-mincho tracking-widest fade-in text-[#4a4030]">
+                    <div className="mt-1 bg-white/70 backdrop-blur px-6 py-2 rounded-full border border-border/30 text-sm sm:text-base font-mincho tracking-widest fade-in text-[#4a4030]">
                       {offeringMessage}
                     </div>
                   )}
-                  <button onClick={() => setHasInteracted(false)} className="mt-6 text-[10px] tracking-widest text-text-tertiary border-b border-text-tertiary pb-0.5 hover:text-text-secondary transition-colors">戻る</button>
+                  <button onClick={() => setHasInteracted(false)} className="mt-4 text-[10px] tracking-widest text-text-tertiary border-b border-text-tertiary pb-0 hover:text-text-secondary transition-colors">戻る</button>
                 </div>
               ) : !showForm && (
                 <>
