@@ -6,6 +6,7 @@ function App() {
   const [showForm, setShowForm] = useState(false);
   const [hasInteracted, setHasInteracted] = useState(false);
 
+  // ローカルストレージからの読み込み
   const [name, setName] = useState(() => localStorage.getItem('jizo_name') || '');
   const [myPostIds, setMyPostIds] = useState<string[]>(() => JSON.parse(localStorage.getItem('jizo_my_posts') || '[]'));
   const [favoriteIds, setFavoriteIds] = useState<string[]>(() => JSON.parse(localStorage.getItem('jizo_favorites') || '[]'));
@@ -13,6 +14,14 @@ function App() {
   const [omusubiCount, setOmusubiCount] = useState(() => Number(localStorage.getItem('jizo_omusubi')) || 0);
   const [dangoCount, setDangoCount] = useState(() => Number(localStorage.getItem('jizo_dango')) || 0);
   
+  // 投稿制限のための状態
+  const [dailyCount, setDailyCount] = useState(() => {
+    const lastDate = localStorage.getItem('jizo_last_post_date');
+    const today = new Date().toLocaleDateString('ja-JP');
+    if (lastDate !== today) return 0; // 日付が変わっていたらリセット
+    return Number(localStorage.getItem('jizo_daily_count')) || 0;
+  });
+
   const [viewMode, setViewMode] = useState<'all' | 'mypage'>('all');
   const [myTab, setMyTab] = useState<'posts' | 'favorites'>('posts');
 
@@ -100,7 +109,7 @@ function App() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!content.trim() || !name.trim() || submitting) return;
+    if (!content.trim() || !name.trim() || submitting || dailyCount >= 5) return;
     setSubmitting(true);
 
     try {
@@ -124,6 +133,13 @@ function App() {
         const newVirtue = virtue + 1;
         setVirtue(newVirtue);
         localStorage.setItem('jizo_virtue', String(newVirtue));
+
+        // 投稿制限のカウント更新
+        const newDailyCount = dailyCount + 1;
+        const today = new Date().toLocaleDateString('ja-JP');
+        setDailyCount(newDailyCount);
+        localStorage.setItem('jizo_daily_count', String(newDailyCount));
+        localStorage.setItem('jizo_last_post_date', today);
 
         if (newVirtue % 3 === 0) {
           const newO = omusubiCount + 1;
@@ -265,7 +281,6 @@ function App() {
                     </div>
                   )}
                   <button onClick={() => setHasInteracted(false)} className="mt-4 text-[10px] tracking-widest text-text-tertiary border-b border-text-tertiary pb-0 hover:text-text-secondary transition-colors">戻る</button>
-                  {/* ここにMuteButtonを追加しました */}
                   <MuteButton />
                 </div>
               ) : !showForm && (
@@ -303,7 +318,13 @@ function App() {
             <div className="w-full max-w-lg mb-12 flex flex-col items-center" ref={formRef}>
               {!showForm ? (
                 <>
-                  <button onClick={() => { setShowForm(true); setOfferingEffect('none'); setOfferingMessage(''); if (audioRef.current && !isMuted) audioRef.current.play().catch(() => {}); }} className="bg-[#4a4030] hover:bg-[#3d3428] text-white w-full font-medium shadow-lg text-lg py-5 rounded-lg transition-colors tracking-widest">ありがとうを灯す</button>
+                  {dailyCount >= 5 ? (
+                    <div className="w-full flex flex-col items-center space-y-4 fade-in">
+                      <p className="text-sm font-mincho tracking-widest text-[#4a4030] bg-white/50 px-6 py-4 rounded-lg border border-border/30">今日はたくさん灯してくれましたな。また明日、おいでなされ。</p>
+                    </div>
+                  ) : (
+                    <button onClick={() => { setShowForm(true); setOfferingEffect('none'); setOfferingMessage(''); if (audioRef.current && !isMuted) audioRef.current.play().catch(() => {}); }} className="bg-[#4a4030] hover:bg-[#3d3428] text-white w-full font-medium shadow-lg text-lg py-5 rounded-lg transition-colors tracking-widest">ありがとうを灯す</button>
+                  )}
                   <MuteButton />
                 </>
               ) : (
