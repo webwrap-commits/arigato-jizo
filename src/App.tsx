@@ -68,8 +68,7 @@ function App() {
     const handleVisibilityChange = () => {
       if (document.hidden) {
         audio.pause();
-      } else if (!isMuted) {
-        audio.play().catch(() => {});
+        setIsMuted(true); // ブラウザを閉じたらミュート状態にする
       }
     };
 
