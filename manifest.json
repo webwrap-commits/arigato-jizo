@@ -1,0 +1,21 @@
+{
+  "name": "ありがと地蔵",
+  "short_name": "ありがと地蔵",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#ffffff",
+  "icons": [
+    {
+      "src": "https://res.cloudinary.com/dh6zibjr8/image/upload/v1769761916/512icon_ibwy95.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "https://res.cloudinary.com/dh6zibjr8/image/upload/v1769761916/512icon_ibwy95.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    }
+  ]
+}
